@@ -94,7 +94,7 @@ export function createParticleCompositionEditor(host:HTMLElement,scene:THREE.Sce
       <label>Density gradient <select data-field="gradient"><option>uniform</option><option>center</option><option>edge</option><option>focus</option></select></label>
       ${numberRow('Particles','count',f.count,1,4000,1)}${numberRow('Distribution','distribution',f.distribution,.2,3)}${numberRow('Spacing','spacing',f.spacing,.2,3)}
       <h3>Selected region</h3>${numberRow('Focus X','focus.0',f.focus[0],-1,1)}${numberRow('Focus Y','focus.1',f.focus[1],-1,1)}${numberRow('Focus Z','focus.2',f.focus[2],-1,1)}
-      <div class="pc-actions"><button data-action="custom-add">Add custom point</button><button data-action="custom-clear">Clear custom points</button></div><small>${f.custom.length} custom points. Select Custom shape to use them.</small></section>`:''}
+      <div class="pc-actions"><button data-action="custom-add">Add custom point</button><button data-action="custom-remove">Remove point</button><button data-action="custom-clear">Clear custom points</button></div><small>${f.custom.length} custom points. Select Custom shape to use them.</small>${f.custom.length?`<select data-action="point" aria-label="Select custom point"></select>${numberRow('Point X','custom.0',f.custom[Math.min(selectedCustom,f.custom.length-1)][0],-1,1)}${numberRow('Point Y','custom.1',f.custom[Math.min(selectedCustom,f.custom.length-1)][1],-1,1)}${numberRow('Point Z','custom.2',f.custom[Math.min(selectedCustom,f.custom.length-1)][2],-1,1)}`:''}</section>`:''}
       <section><h3>Exclusion zones</h3><div class="pc-actions"><select data-action="zone" aria-label="Select exclusion zone"></select><button data-action="zone-add">Add zone</button><button data-action="zone-delete">Delete</button></div>
       ${z?`${numberRow('X','zone.0',z.center[0],-5,5)}${numberRow('Y','zone.1',z.center[1],-5,5)}${numberRow('Z','zone.2',z.center[2],-6,5)}${numberRow('Radius','zone.radius',z.radius,.05,5)}`:''}</section>
       <section><h3>Composition presets</h3><div class="pc-actions"><select data-action="preset" aria-label="Select saved preset"></select><button data-action="save">Save</button><button data-action="load">Load</button><button data-action="preset-delete">Delete</button></div></section>`
@@ -104,20 +104,21 @@ export function createParticleCompositionEditor(host:HTMLElement,scene:THREE.Sce
     zoneSelect.add(new Option('Select zone',''));state.zones.forEach((item,i)=>zoneSelect.add(new Option('Zone '+(i+1),item.id)));zoneSelect.value=state.selectedZone
     const presetSelect=panel.querySelector<HTMLSelectElement>('[data-action="preset"]')!
     for(const name of Object.keys(presets!))presetSelect.add(new Option(name,name))
-    if(f){panel.querySelector<HTMLSelectElement>('[data-field="shape"]')!.value=f.shape;panel.querySelector<HTMLSelectElement>('[data-field="layer"]')!.value=f.layer;panel.querySelector<HTMLSelectElement>('[data-field="gradient"]')!.value=f.gradient}
+    if(f){panel.querySelector<HTMLSelectElement>('[data-field="shape"]')!.value=f.shape;panel.querySelector<HTMLSelectElement>('[data-field="layer"]')!.value=f.layer;panel.querySelector<HTMLSelectElement>('[data-field="gradient"]')!.value=f.gradient;const points=panel.querySelector<HTMLSelectElement>('[data-action="point"]');if(points){f.custom.forEach((_,i)=>points.add(new Option('Point '+(i+1),String(i))));selectedCustom=Math.min(selectedCustom,f.custom.length-1);points.value=String(selectedCustom)}}
   }
   const change=(field:string,value:string)=>{
     const f=selected();if(!f)return
     if(field==='shape')f.shape=value as Shape
     else if(field==='layer'){f.layer=value as Layer;f.position[2]=value==='foreground'?2:value==='background'?-3:0}
     else if(field==='gradient')f.gradient=value as Gradient
+    else if(field.startsWith('custom.')){const point=f.custom[selectedCustom];if(!point)return;point[Number(field.split('.')[1])]=Number(value)}
     else if(field.startsWith('zone.')){const z=state.zones.find(v=>v.id===state.selectedZone);if(!z)return;const part=field.split('.')[1];if(part==='radius')z.radius=Number(value);else z.center[Number(part)]=Number(value)}
     else if(field.includes('.')){const [part,index]=field.split('.');(f[part as 'position'|'dimensions'|'rotation'|'focus'] as Vec)[Number(index)]=Number(value)}
     else if(field==='count'||field==='distribution'||field==='spacing')f[field]=Number(value)
     redraw();persist()
   }
   panel.addEventListener('input',event=>{const target=event.target as HTMLInputElement;if(!target.dataset.field)return;change(target.dataset.field,target.value);const output=target.nextElementSibling;if(output)output.textContent=Number(target.value).toFixed(2)})
-  panel.addEventListener('change',event=>{const target=event.target as HTMLSelectElement;if(target.dataset.field){change(target.dataset.field,target.value);render()}else if(target.dataset.action==='formation'){state.selected=target.value;redraw();render();persist()}else if(target.dataset.action==='zone'){state.selectedZone=target.value;render();persist()}})
+  panel.addEventListener('change',event=>{const target=event.target as HTMLSelectElement;if(target.dataset.field){change(target.dataset.field,target.value);render()}else if(target.dataset.action==='formation'){state.selected=target.value;redraw();render();persist()}else if(target.dataset.action==='zone'){state.selectedZone=target.value;render();persist()}else if(target.dataset.action==='point'){selectedCustom=Number(target.value);render()}})
   panel.addEventListener('click',event=>{
     const action=(event.target as HTMLElement).closest<HTMLButtonElement>('button[data-action]')?.dataset.action;if(!action)return
     const f=selected()
@@ -125,7 +126,8 @@ export function createParticleCompositionEditor(host:HTMLElement,scene:THREE.Sce
     if(action==='add'){const next=fresh('Formation '+(state.formations.length+1));state.formations.push(next);state.selected=next.id}
     if(action==='duplicate'&&f){const copy=structuredClone(f);copy.id=uid();copy.name=f.name+' copy';copy.position[0]+=.3;state.formations.push(copy);state.selected=copy.id}
     if(action==='delete'&&f){state.formations=state.formations.filter(v=>v.id!==f.id);state.selected=state.formations[0]?.id??''}
-    if(action==='custom-add'&&f){f.custom.push([0,0,0]);f.shape='custom'}
+    if(action==='custom-add'&&f){const last=f.custom.at(-1)??[0,0,0];f.custom.push([last[0]+.1,last[1],last[2]]);selectedCustom=f.custom.length-1;f.shape='custom'}
+    if(action==='custom-remove'&&f){f.custom.splice(selectedCustom,1);selectedCustom=Math.max(0,selectedCustom-1)}
     if(action==='custom-clear'&&f)f.custom=[]
     if(action==='zone-add'){const z={id:uid(),center:[0,0,0] as Vec,radius:.5};state.zones.push(z);state.selectedZone=z.id}
     if(action==='zone-delete'){state.zones=state.zones.filter(z=>z.id!==state.selectedZone);state.selectedZone=''}
