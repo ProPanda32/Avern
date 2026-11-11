@@ -118,7 +118,7 @@ export function createParticleCompositionEditor(host:HTMLElement,scene:THREE.Sce
   panel.addEventListener('input',event=>{const target=event.target as HTMLInputElement;if(!target.dataset.field)return;change(target.dataset.field,target.value);const output=target.nextElementSibling;if(output)output.textContent=Number(target.value).toFixed(2)})
   panel.addEventListener('change',event=>{const target=event.target as HTMLSelectElement;if(target.dataset.field){change(target.dataset.field,target.value);render()}else if(target.dataset.action==='formation'){state.selected=target.value;redraw();render();persist()}else if(target.dataset.action==='zone'){state.selectedZone=target.value;render();persist()}})
   panel.addEventListener('click',event=>{
-    const action=(event.target as HTMLElement).closest<HTMLElement>('[data-action]')?.dataset.action;if(!action)return
+    const action=(event.target as HTMLElement).closest<HTMLButtonElement>('button[data-action]')?.dataset.action;if(!action)return
     const f=selected()
     if(action==='close'){panel.hidden=true;return}
     if(action==='add'){const next=fresh('Formation '+(state.formations.length+1));state.formations.push(next);state.selected=next.id}
