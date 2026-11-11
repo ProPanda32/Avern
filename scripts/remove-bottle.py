@@ -120,6 +120,7 @@ panel_anchor = "  resize();rebuildGarden()\n"
 panel_extra = """  resize();rebuildGarden()
   const particlePanel=document.createElement('details')
   particlePanel.className='avern-particle-settings'
+  particlePanel.open=true
   particlePanel.setAttribute('aria-label','Particle composition settings')
   const particleSummary=document.createElement('summary')
   particleSummary.textContent='Particle settings'
