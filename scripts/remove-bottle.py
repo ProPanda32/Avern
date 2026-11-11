@@ -120,8 +120,8 @@ panel_extra = """  resize();rebuildGarden()
     ['Size','size',.2,4,.05],
     ['Opacity','opacity',0,1,.05],
     ['Brightness','brightness',0,4,.05],
-    ['Movement','speed',0,4,.05],
-    ['Ambient drift','ambientSpeed',0,5,.05],
+    ['Interaction speed','speed',0,4,.05],
+    ['Continuous motion','ambientSpeed',0,5,.05],
     ['Cursor response','repulsion',0,5,.05],
     ['Response radius','radius',.1,4,.05],
     ['Green detail','mossStrength',0,4,.05],
@@ -200,3 +200,11 @@ hero_css.write_text(
 """,
     encoding="utf-8",
 )
+
+# Make continuous motion visibly affect every particle; zero still pauses the drift.
+garden = Path("source/src/garden.ts")
+garden_text = garden.read_text(encoding="utf-8")
+old_drift = "p+=vec3(sin(time*ambientSpeed*.18+p.y*3.),cos(time*ambientSpeed*.13+p.x*2.),0.)*.009;"
+new_drift = "p+=vec3(sin(time*ambientSpeed*.42+p.y*3.),cos(time*ambientSpeed*.34+p.x*2.),sin(time*ambientSpeed*.28+p.z*2.))*(ambientSpeed*.026);"
+assert garden_text.count(old_drift) == 1, "Particle drift shader changed in source"
+garden.write_text(garden_text.replace(old_drift, new_drift), encoding="utf-8")
