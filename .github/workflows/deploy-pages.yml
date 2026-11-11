@@ -1,4 +1,4 @@
-name: Publish Avern
+name: Publish original Nocturne without 3D bottle
 on:
   push:
     branches: [main]
@@ -11,17 +11,42 @@ concurrency:
   group: pages
   cancel-in-progress: true
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Avern changes
+        uses: actions/checkout@v4
+      - name: Checkout original Nocturne
+        uses: actions/checkout@v4
+        with:
+          repository: ProPanda32/Nocturne
+          ref: 327a1e4904e5c3fa8f6b702664a7633779989084
+          path: source
+      - name: Remove only the bottle model
+        run: python scripts/remove-bottle.py
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        working-directory: source
+        run: npm install --no-audit --no-fund
+      - name: Build original site for Avern
+        working-directory: source
+        run: npm run build
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: source/dist
   deploy:
+    needs: build
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: .
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
