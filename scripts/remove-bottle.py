@@ -22,14 +22,13 @@ text = text[:start] + '''    <section class="fragrance-section" id="fragrance" a
     </section>
   </main>
   <dialog id="problem-slide" class="problem-slide" aria-label="The Problem slide">
-    <button class="problem-slide-close" type="button" aria-label="Close slide">×</button>
+    <button class="problem-slide-close dialog-close" type="button" aria-label="Close slide">×</button>
     <img src="/Avern/assets/the-problem-slide.png" alt="The Problem: many websites feel static; examples of interactive websites">
   </dialog>
 ''' + text[end:]
 slide_anchor = "const hero=app.querySelector<HTMLElement>('.site-hero')!"
 slide_actions = """const problemSlide=app.querySelector<HTMLDialogElement>('#problem-slide')!
 app.querySelector<HTMLButtonElement>('.slide-tile')!.addEventListener('click',()=>problemSlide.showModal())
-app.querySelector<HTMLButtonElement>('.problem-slide-close')!.addEventListener('click',()=>problemSlide.close())
 problemSlide.addEventListener('click',event=>{if(event.target===problemSlide)problemSlide.close()})
 """
 assert text.count(slide_anchor) == 1, "Slide script anchor changed"
