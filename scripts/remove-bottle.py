@@ -411,7 +411,7 @@ hero_css.write_text(
     hero_css.read_text(encoding="utf-8")
     + """
 .averna-hero-logo{clip-path:polygon(12% 20%,68% 20%,68% 56%,12% 56%)}
-.averna-hero-flower{clip-path:polygon(66% 12%,94% 12%,94% 56%,66% 56%)}
+.averna-hero-flower{clip-path:polygon(66% 12%,88% 12%,88% 52%,66% 52%)}
 """,
     encoding="utf-8",
 )
@@ -427,8 +427,11 @@ new_material = """  const artworkMaterial=new THREE.MeshBasicMaterial({map:artwo
       float rainbowY=1.0-vMapUv.y;
       float rainbowTop=.38+.19*(1.0-pow(abs(rainbowX*2.0-1.0),1.35));
       float rainbowBottom=rainbowTop+.30;
+      vec3 rainbowColor=texture2D(map,vMapUv).rgb;
+      float rainbowChroma=max(max(rainbowColor.r,rainbowColor.g),rainbowColor.b)-min(min(rainbowColor.r,rainbowColor.g),rainbowColor.b);
       diffuseColor.a*=smoothstep(rainbowTop,rainbowTop+.035,rainbowY)
-        *(1.0-smoothstep(rainbowBottom-.04,rainbowBottom,rainbowY));`)
+        *(1.0-smoothstep(rainbowBottom-.04,rainbowBottom,rainbowY))
+        *smoothstep(.18,.38,rainbowChroma);`)
   }
   artworkMaterial.customProgramCacheKey=()=> 'averna-rainbow-mask-v1'
   const artwork=new THREE.Mesh(new THREE.PlaneGeometry(1,1),artworkMaterial)"""
