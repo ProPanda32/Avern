@@ -15,9 +15,25 @@ assert text.count(old_model) == 1, "Bottle model block changed in source"
 text = text.replace(old_import, "").replace(old_model, new_model)
 start = text.index('    <section class="fragrance-section"')
 end = text.index('  <dialog id="menu-dialog"', start)
-text = text[:start] + '''    <section class="fragrance-section" id="fragrance" aria-label="Open cream canvas"></section>
+text = text[:start] + '''    <section class="fragrance-section" id="fragrance" aria-label="Presentation slides">
+      <button class="slide-tile" type="button" aria-label="Open The Problem slide">
+        <img src="/Avern/assets/the-problem-slide.png" alt="Preview of The Problem presentation slide">
+      </button>
+    </section>
   </main>
+  <dialog id="problem-slide" class="problem-slide" aria-label="The Problem slide">
+    <button class="problem-slide-close" type="button" aria-label="Close slide">×</button>
+    <img src="/Avern/assets/the-problem-slide.png" alt="The Problem: many websites feel static; examples of interactive websites">
+  </dialog>
 ''' + text[end:]
+slide_anchor = "const hero=app.querySelector<HTMLElement>('.site-hero')!"
+slide_actions = """const problemSlide=app.querySelector<HTMLDialogElement>('#problem-slide')!
+app.querySelector<HTMLButtonElement>('.slide-tile')!.addEventListener('click',()=>problemSlide.showModal())
+app.querySelector<HTMLButtonElement>('.problem-slide-close')!.addEventListener('click',()=>problemSlide.close())
+problemSlide.addEventListener('click',event=>{if(event.target===problemSlide)problemSlide.close()})
+"""
+assert text.count(slide_anchor) == 1, "Slide script anchor changed"
+text = text.replace(slide_anchor, slide_actions + slide_anchor)
 hero.write_text(text, encoding="utf-8")
 
 vite = Path("source/vite.config.ts")
@@ -163,6 +179,25 @@ hero_css.write_text(
 .avern-particle-row output{text-align:right;font-variant-numeric:tabular-nums}
 .avern-particle-settings button{margin:12px 15px 15px;padding:7px 11px;border:1px solid #b79a73;background:#252e28;color:#f3eadb;cursor:pointer}
 @media(max-width:700px){.avern-particle-settings{right:10px;top:10px;width:min(280px,calc(100vw - 20px))}}
+""",
+    encoding="utf-8",
+)
+
+# Show the new image as a clickable presentation slide.
+hero_css.write_text(
+    hero_css.read_text(encoding="utf-8")
+    + """
+.fragrance-section{display:grid;place-items:center}
+.slide-tile{display:block;width:min(76vw,920px);aspect-ratio:16/10;padding:0;border:1px solid #d6cec1;background:#fff;box-shadow:0 24px 70px #3a302b24;cursor:pointer;overflow:hidden;transition:transform .35s ease,box-shadow .35s ease}
+.slide-tile:hover{transform:translateY(-6px);box-shadow:0 32px 80px #3a302b35}
+.slide-tile:focus-visible{outline:3px solid #9c754b;outline-offset:6px}
+.slide-tile img{display:block;width:100%;height:100%;object-fit:contain}
+.problem-slide{width:min(94vw,1100px);max-width:1100px;max-height:94svh;padding:40px 22px 22px;border:0;background:#eee9df;box-shadow:0 24px 100px #0009}
+.problem-slide::backdrop{background:#070b0ae0;backdrop-filter:blur(8px)}
+.problem-slide img{display:block;max-width:100%;max-height:calc(94svh - 70px);margin:auto;object-fit:contain}
+.problem-slide-close{position:absolute;top:8px;right:12px;border:0;background:transparent;color:#29261f;font:30px Arial,sans-serif;cursor:pointer}
+@media(max-width:700px){.slide-tile{width:88vw;aspect-ratio:4/5}.problem-slide{padding:35px 8px 8px}}
+@media(prefers-reduced-motion:reduce){.slide-tile{transition:none}}
 """,
     encoding="utf-8",
 )
