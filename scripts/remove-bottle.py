@@ -12,7 +12,13 @@ old_model = """  const gltf=await new GLTFLoader().loadAsync(new URL('../Public/
 new_model = "  status.hidden=true;hero.dataset.state='ready'\n"
 assert text.count(old_import) == 1, "Bottle loader import changed in source"
 assert text.count(old_model) == 1, "Bottle model block changed in source"
-hero.write_text(text.replace(old_import, "").replace(old_model, new_model), encoding="utf-8")
+text = text.replace(old_import, "").replace(old_model, new_model)
+start = text.index('    <section class="fragrance-section"')
+end = text.index('  <dialog id="menu-dialog"', start)
+text = text[:start] + '''    <section class="fragrance-section" id="fragrance" aria-label="Open cream canvas"></section>
+  </main>
+''' + text[end:]
+hero.write_text(text, encoding="utf-8")
 
 vite = Path("source/vite.config.ts")
 config = vite.read_text(encoding="utf-8")
@@ -62,5 +68,12 @@ hero_css.write_text(
 }
 @keyframes diagonal-glow { from { opacity: .6; background-position: 0% 0; } to { opacity: .95; background-position: 100% 0; } }
 """,
+    encoding="utf-8",
+)
+
+# The space after the transition is a single uninterrupted cream canvas.
+hero_css.write_text(
+    hero_css.read_text(encoding="utf-8")
+    + "\n.fragrance-section { min-height: 100svh; background: #eee9df; }\n",
     encoding="utf-8",
 )
