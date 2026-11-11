@@ -375,3 +375,43 @@ hero_css.write_text(
 """,
     encoding="utf-8",
 )
+
+# Put the rainbow inside the 3D scene, behind the garden particles.
+hero_text = hero.read_text(encoding="utf-8")
+old_art = '<img class="averna-hero-art" src="/Avern/assets/averna-hero.png" alt="AVERNA — Design, Create, Innovate">'
+new_art = '<img class="averna-hero-art averna-hero-logo" src="/Avern/assets/averna-hero.png" alt="AVERNA — Design, Create, Innovate">\n      <img class="averna-hero-art averna-hero-flower" src="/Avern/assets/averna-hero.png" alt="" aria-hidden="true">'
+assert hero_text.count(old_art) == 1, "Averna artwork markup changed"
+hero_text = hero_text.replace(old_art, new_art)
+old_stage_import = "import { createOpticalStage } from './optical-stage'"
+assert hero_text.count(old_stage_import) == 1, "Stage import changed"
+hero_text = hero_text.replace(old_stage_import, "import { createOpticalStage, WORLD } from './optical-stage'")
+art_setup_anchor = "  camera.position.z=5\n"
+art_setup = """  camera.position.z=5
+  const artworkTexture=new THREE.TextureLoader().load('/Avern/assets/averna-hero.png')
+  artworkTexture.colorSpace=THREE.SRGBColorSpace
+  const artwork=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:artworkTexture,transparent:true,depthWrite:false,toneMapped:false}))
+  artwork.layers.set(WORLD);artwork.position.z=-7;scene.add(artwork)
+  function fitArtwork(){
+    const viewHeight=2*Math.tan(THREE.MathUtils.degToRad(camera.fov/2))*(camera.position.z+7)
+    const width=Math.min(viewHeight*camera.aspect*.92,viewHeight*.82*2)
+    artwork.scale.set(width,width/2,1)
+    artwork.position.x=camera.position.x;artwork.position.y=camera.position.y
+  }
+"""
+assert hero_text.count(art_setup_anchor) == 1, "Camera setup changed"
+hero_text = hero_text.replace(art_setup_anchor, art_setup)
+old_resize = "renderer.setSize(w,h,false);frame()"
+assert hero_text.count(old_resize) == 1, "Hero resize changed"
+hero_text = hero_text.replace(old_resize, "renderer.setSize(w,h,false);fitArtwork();frame()")
+old_camera_update = "camera.updateProjectionMatrix()\n    renderer.domElement.style.filter"
+assert hero_text.count(old_camera_update) == 1, "Camera config changed"
+hero_text = hero_text.replace(old_camera_update, "camera.updateProjectionMatrix();fitArtwork()\n    renderer.domElement.style.filter")
+hero.write_text(hero_text, encoding="utf-8")
+hero_css.write_text(
+    hero_css.read_text(encoding="utf-8")
+    + """
+.averna-hero-logo{clip-path:polygon(12% 20%,68% 20%,68% 56%,12% 56%)}
+.averna-hero-flower{clip-path:polygon(66% 12%,94% 12%,94% 56%,66% 56%)}
+""",
+    encoding="utf-8",
+)
