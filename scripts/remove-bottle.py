@@ -310,4 +310,36 @@ garden_text = garden_text.replace(old_declaration, "sizeMultiplier,ambientSpeed,
 old_return = "    count, root, spheres, syncSpheres, probeMoss,"
 assert garden_text.count(old_return) == 1, "Garden controls changed in source"
 garden_text = garden_text.replace(old_return, "    count, root, spheres, syncSpheres, probeMoss,\n    setMotionAmount(value:number){motionAmount=value;material.uniforms.ambientStrength.value=value},")
-garden.write_text(garden_text, encoding="utf-8")
+old_spheres = """  const accents=[[-.99,-.62,2.65,.23,4],[1.02,-.86,2.7,.24,4],[-.68,-.85,2.45,.16,1],
+    [.84,-.61,1.8,.16,3],[-.49,.43,-.15,.13,0],[.62,.02,-.8,.10,4],
+    [.35,-.37,.1,.10,4],[-.54,-.34,-.25,.09,4],[.87,.26,-.6,.10,1],[-.72,.28,-.6,.07,4]]
+  const orbCount=compact?32:57
+  for(let i=0;i<orbCount;i++) {
+    let x:number,y:number,z:number,radius:number,kind:number
+    if(i<accents.length){[x,y,z,radius,kind]=accents[i];if(portrait){x*=1.12;radius*=.62}}
+    else {
+      x=r(-1.05,1.05);y=r(-.65,.85);z=r(-3.6,.6);radius=r(.022,.072)
+      if(Math.abs(x)<exclusion+.05)x=(x<0?-1:1)*(exclusion+.07+random()*.28)
+      kind=i%6;if(kind===4 && i%3)kind=0
+    }
+"""
+new_spheres = """  const accents=[[-.88,-.58,2.4,.17,4],[.88,-.58,2.4,.17,4],[-.67,-.28,1.2,.11,1],
+    [.67,-.28,1.2,.11,3],[-.74,.35,-.3,.10,0],[.74,.35,-.3,.10,1],
+    [-.56,.64,-1,.07,2],[.56,.64,-1,.07,5],[-.88,.06,-.6,.08,4],[.88,.06,-.6,.08,0]]
+  const orbCount=compact?32:57
+  for(let i=0;i<orbCount;i++) {
+    let x:number,y:number,z:number,radius:number,kind:number
+    if(i<accents.length){[x,y,z,radius,kind]=accents[i];if(portrait){x*=1.12;radius*=.62}}
+    else {
+      const n=i-accents.length,side=n%2===0?-1:1,row=Math.floor(n/2)
+      const column=Math.floor(row/12),step=row%12
+      x=side*(.53+column*.27+(random()-.5)*.035)
+      y=-.57+step*.113+(random()-.5)*.035
+      z=-2.6+column*.45+(random()-.5)*.35
+      radius=.025+(step%4)*.007
+      kind=[0,1,2,5,3,4][(step+column)%6]
+      if(portrait){x*=1.12;radius*=.72}
+    }
+"""
+assert garden_text.count(old_spheres) == 1, "Sphere layout changed in source"
+garden.write_text(garden_text.replace(old_spheres, new_spheres), encoding="utf-8")
