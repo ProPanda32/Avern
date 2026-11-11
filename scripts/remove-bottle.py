@@ -23,6 +23,6 @@ vite.write_text(config.replace("'/Nocturne/'", "'/Avern/'"), encoding="utf-8")
 hero_css = Path("source/src/hero.css")
 hero_css.write_text(
     hero_css.read_text(encoding="utf-8")
-    + "\n.site-header { display: none !important; }\n",
+    + "\n.site-header, .bottle-controls { display: none !important; }\n",
     encoding="utf-8",
 )
