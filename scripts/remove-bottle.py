@@ -207,4 +207,25 @@ garden_text = garden.read_text(encoding="utf-8")
 old_drift = "p+=vec3(sin(time*ambientSpeed*.18+p.y*3.),cos(time*ambientSpeed*.13+p.x*2.),0.)*.009;"
 new_drift = "p+=vec3(sin(time*ambientSpeed*.42+p.y*3.),cos(time*ambientSpeed*.34+p.x*2.),sin(time*ambientSpeed*.28+p.z*2.))*(ambientSpeed*.026);"
 assert garden_text.count(old_drift) == 1, "Particle drift shader changed in source"
-garden.write_text(garden_text.replace(old_drift, new_drift), encoding="utf-8")
+garden_text = garden_text.replace(old_drift, new_drift)
+old_tick = """      for(const {mesh,home,phase} of spheres){
+        if(!mesh.visible)continue
+        mesh.position.copy(home)
+        const options=mesh.userData.settings as SphereTransform|undefined
+        if(!reduced){mesh.position.y+=Math.sin(seconds*.3*(options?.floatSpeed??1)+phase)*.006;mesh.rotation.y+=delta*.015*(options?.floatSpeed??1)}
+      }
+"""
+new_tick = """      const drift=reduced?0:ambientSpeed.value
+      moss.position.set(Math.sin(seconds*.31*drift)*.045*drift,Math.cos(seconds*.23*drift)*.026*drift,0)
+      leaves.position.set(Math.sin(seconds*.27*drift+1.3)*.038*drift,Math.cos(seconds*.19*drift+.6)*.032*drift,0)
+      branches.position.set(Math.sin(seconds*.21*drift+.8)*.018*drift,Math.cos(seconds*.17*drift)*.018*drift,0)
+      beads.position.set(Math.sin(seconds*.36*drift+2.1)*.028*drift,Math.cos(seconds*.29*drift)*.02*drift,0)
+      for(const {mesh,home,phase} of spheres){
+        if(!mesh.visible)continue
+        mesh.position.copy(home)
+        const options=mesh.userData.settings as SphereTransform|undefined
+        if(drift>0){mesh.position.y+=Math.sin(seconds*.3*drift*(options?.floatSpeed??1)+phase)*.012*drift;mesh.rotation.y+=delta*.025*drift*(options?.floatSpeed??1)}
+      }
+"""
+assert garden_text.count(old_tick) == 1, "Garden animation loop changed in source"
+garden.write_text(garden_text.replace(old_tick, new_tick), encoding="utf-8")
