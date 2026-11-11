@@ -106,7 +106,7 @@ load_extra = """  let config=loadConfig(creatorMode)
   const savedGap=Number(localStorage.getItem(gapStoreKey))
   let particleGap=Number.isFinite(savedGap)&&savedGap>=.7&&savedGap<=1.4?savedGap:1
   const savedMotion=Number(localStorage.getItem(motionStoreKey))
-  let particleMotionAmount=Number.isFinite(savedMotion)&&savedMotion>=0&&savedMotion<=2?savedMotion:.25
+  let particleMotionAmount=Number.isFinite(savedMotion)&&savedMotion>=0&&savedMotion<=2?savedMotion:0
   try {
     const saved=JSON.parse(localStorage.getItem(particleStoreKey)||'null') as Record<string,number>|null
     if(saved)for(const key of ['count','size','opacity','brightness','speed','ambientSpeed','repulsion','radius','mossStrength'] as const){
@@ -214,7 +214,7 @@ panel_extra = """  resize();rebuildGarden()
     }
     particleSpread=1;spreadInput.value='1';spreadValue.textContent='1'
     particleGap=1;gapInput.value='1';gapValue.textContent='1'
-    particleMotionAmount=.25;motionInput.value='.25';motionValue.textContent='.25'
+    particleMotionAmount=0;motionInput.value='0';motionValue.textContent='0'
     try{localStorage.removeItem(particleStoreKey);localStorage.removeItem(spreadStoreKey);localStorage.removeItem(gapStoreKey);localStorage.removeItem(motionStoreKey)}catch{}
     rebuildGarden()
   })
@@ -294,7 +294,7 @@ assert garden_text.count(old_tick) == 1, "Garden animation loop changed in sourc
 garden_text = garden_text.replace(old_tick, new_tick)
 old_signature = "compact: boolean, density=1) {"
 assert garden_text.count(old_signature) == 1, "Garden signature changed in source"
-garden_text = garden_text.replace(old_signature, "compact: boolean, density=1, spreadFactor=1, gapFactor=1, motionAmount=.25) {")
+garden_text = garden_text.replace(old_signature, "compact: boolean, density=1, spreadFactor=1, gapFactor=1, motionAmount=0) {")
 old_spread = "spread:r(.075,.20)"
 assert garden_text.count(old_spread) == 1, "Garden cluster spread changed in source"
 garden_text = garden_text.replace(old_spread, "spread:r(.075,.20)*spreadFactor")
