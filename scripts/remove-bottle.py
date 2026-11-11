@@ -431,7 +431,9 @@ new_material = """  const artworkMaterial=new THREE.MeshBasicMaterial({map:artwo
       float rainbowChroma=max(max(rainbowColor.r,rainbowColor.g),rainbowColor.b)-min(min(rainbowColor.r,rainbowColor.g),rainbowColor.b);
       diffuseColor.a*=smoothstep(rainbowTop,rainbowTop+.035,rainbowY)
         *(1.0-smoothstep(rainbowBottom-.04,rainbowBottom,rainbowY))
-        *smoothstep(.18,.38,rainbowChroma);`)
+        *smoothstep(.18,.38,rainbowChroma)
+        *smoothstep(.08,.22,rainbowX)
+        *(1.0-smoothstep(.84,.96,rainbowX));`)
   }
   artworkMaterial.customProgramCacheKey=()=> 'averna-rainbow-mask-v1'
   const artwork=new THREE.Mesh(new THREE.PlaneGeometry(1,1),artworkMaterial)"""
