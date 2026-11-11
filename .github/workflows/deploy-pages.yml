@@ -22,6 +22,8 @@ jobs:
           repository: ProPanda32/Nocturne
           ref: 327a1e4904e5c3fa8f6b702664a7633779989084
           path: source
+      - name: Include particle composition editor
+        run: cp editor/particle-composition.ts source/src/particle-composition.ts && cp editor/particle-composition.css source/src/particle-composition.css
       - name: Remove only the bottle model
         run: python scripts/remove-bottle.py
       - name: Set up Node
