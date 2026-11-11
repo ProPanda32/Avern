@@ -19,11 +19,10 @@ config = vite.read_text(encoding="utf-8")
 assert config.count("'/Nocturne/'") == 1, "Pages base path changed in source"
 vite.write_text(config.replace("'/Nocturne/'", "'/Avern/'"), encoding="utf-8")
 
-# Keep the header controls but remove the visible words shown in the screenshot.
+# Hide the entire landing header, including its icons.
 hero_css = Path("source/src/hero.css")
 hero_css.write_text(
     hero_css.read_text(encoding="utf-8")
-    + "\n.site-header .header-menu span, .site-header .header-search span, "
-      ".site-header .header-logo, .site-header .world-link { display: none !important; }\n",
+    + "\n.site-header { display: none !important; }\n",
     encoding="utf-8",
 )
