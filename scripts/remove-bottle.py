@@ -219,7 +219,7 @@ panel_extra = """  resize();rebuildGarden()
     rebuildGarden()
   })
   particlePanel.append(resetParticles)
-  hero.append(particlePanel)
+  if(!creatorMode)hero.append(particlePanel)
 """
 assert hero_text.count(panel_anchor) == 1, "Garden setup anchor changed"
 hero_text = hero_text.replace(panel_anchor, panel_extra)
