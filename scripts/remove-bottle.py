@@ -77,3 +77,92 @@ hero_css.write_text(
     + "\n.fragrance-section { min-height: 100svh; background: #eee9df; }\n",
     encoding="utf-8",
 )
+
+# Add a compact, saved particle composition panel to the published scene.
+hero_text = hero.read_text(encoding="utf-8")
+load_anchor = "  let config=loadConfig(creatorMode)\n"
+load_extra = """  let config=loadConfig(creatorMode)
+  const particleStoreKey='avern.particles.v1'
+  try {
+    const saved=JSON.parse(localStorage.getItem(particleStoreKey)||'null') as Record<string,number>|null
+    if(saved)for(const key of ['count','size','opacity','brightness','speed','ambientSpeed','repulsion','radius','mossStrength'] as const){
+      if(typeof saved[key]==='number'&&Number.isFinite(saved[key]))config.particles[key]=saved[key]
+    }
+  } catch { /* Use the original composition when no saved settings exist. */ }
+"""
+assert hero_text.count(load_anchor) == 1, "Config load anchor changed"
+hero_text = hero_text.replace(load_anchor, load_extra)
+panel_anchor = "  resize();rebuildGarden()\n"
+panel_extra = """  resize();rebuildGarden()
+  const particlePanel=document.createElement('details')
+  particlePanel.className='avern-particle-settings'
+  particlePanel.setAttribute('aria-label','Particle composition settings')
+  const particleSummary=document.createElement('summary')
+  particleSummary.textContent='Particle settings'
+  particlePanel.append(particleSummary)
+  const particleFields=[
+    ['Density','count',.2,1.5,.05],
+    ['Size','size',.2,4,.05],
+    ['Opacity','opacity',0,1,.05],
+    ['Brightness','brightness',0,4,.05],
+    ['Movement','speed',0,4,.05],
+    ['Ambient drift','ambientSpeed',0,5,.05],
+    ['Cursor response','repulsion',0,5,.05],
+    ['Response radius','radius',.1,4,.05],
+    ['Green detail','mossStrength',0,4,.05],
+  ] as const
+  const particleInputs:Partial<Record<keyof typeof config.particles,HTMLInputElement>>={}
+  for(const [label,key,min,max,step] of particleFields){
+    const row=document.createElement('label')
+    row.className='avern-particle-row'
+    const name=document.createElement('span')
+    name.textContent=label
+    const input=document.createElement('input')
+    input.type='range';input.min=String(min);input.max=String(max);input.step=String(step)
+    input.value=String(config.particles[key])
+    const value=document.createElement('output')
+    value.textContent=input.value
+    input.addEventListener(key==='count'?'change':'input',()=>{
+      config.particles[key]=Number(input.value)
+      value.textContent=input.value
+      applyConfig()
+      try{localStorage.setItem(particleStoreKey,JSON.stringify(config.particles))}catch{}
+    })
+    row.append(name,input,value)
+    particlePanel.append(row)
+    particleInputs[key]=input
+  }
+  const resetParticles=document.createElement('button')
+  resetParticles.type='button';resetParticles.textContent='Reset particles'
+  resetParticles.addEventListener('click',()=>{
+    config.particles={...production.particles}
+    for(const [,key] of particleFields){
+      const input=particleInputs[key]!
+      input.value=String(config.particles[key])
+      input.nextElementSibling!.textContent=input.value
+    }
+    try{localStorage.removeItem(particleStoreKey)}catch{}
+    applyConfig()
+  })
+  particlePanel.append(resetParticles)
+  hero.append(particlePanel)
+"""
+assert hero_text.count(panel_anchor) == 1, "Garden setup anchor changed"
+hero_text = hero_text.replace(panel_anchor, panel_extra)
+hero.write_text(hero_text, encoding="utf-8")
+hero_css.write_text(
+    hero_css.read_text(encoding="utf-8")
+    + """
+.avern-particle-settings{position:fixed;z-index:100;right:18px;top:18px;width:min(300px,calc(100vw - 36px));max-height:calc(100svh - 36px);overflow:auto;color:#f3eadb;background:#101714e8;border:1px solid #bc9b6b88;box-shadow:0 12px 40px #0008;backdrop-filter:blur(16px);font:12px/1.4 Arial,sans-serif}
+.avern-particle-settings summary{list-style:none;cursor:pointer;padding:12px 15px;letter-spacing:.08em}
+.avern-particle-settings summary::-webkit-details-marker{display:none}
+.avern-particle-settings summary::after{content:"+";float:right}
+.avern-particle-settings[open] summary::after{content:"−"}
+.avern-particle-row{display:grid;grid-template-columns:1fr 85px 32px;gap:8px;align-items:center;padding:6px 15px}
+.avern-particle-row input{width:100%;accent-color:#d6aa6e}
+.avern-particle-row output{text-align:right;font-variant-numeric:tabular-nums}
+.avern-particle-settings button{margin:12px 15px 15px;padding:7px 11px;border:1px solid #b79a73;background:#252e28;color:#f3eadb;cursor:pointer}
+@media(max-width:700px){.avern-particle-settings{right:10px;top:10px;width:min(280px,calc(100vw - 20px))}}
+""",
+    encoding="utf-8",
+)
