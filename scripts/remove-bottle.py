@@ -415,3 +415,23 @@ hero_css.write_text(
 """,
     encoding="utf-8",
 )
+
+# Mask the 3D backdrop texture to the rainbow band only; the logo and orchid stay
+# in their separate foreground crops, avoiding doubled text and petals.
+hero_text = hero.read_text(encoding="utf-8")
+old_material = "  const artwork=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:artworkTexture,transparent:true,depthWrite:false,toneMapped:false}))"
+new_material = """  const artworkMaterial=new THREE.MeshBasicMaterial({map:artworkTexture,transparent:true,depthWrite:false,toneMapped:false})
+  artworkMaterial.onBeforeCompile=shader=>{
+    shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>',`#include <map_fragment>
+      float rainbowX=vMapUv.x;
+      float rainbowY=1.0-vMapUv.y;
+      float rainbowTop=.38+.19*(1.0-pow(abs(rainbowX*2.0-1.0),1.35));
+      float rainbowBottom=rainbowTop+.30;
+      diffuseColor.a*=smoothstep(rainbowTop,rainbowTop+.035,rainbowY)
+        *(1.0-smoothstep(rainbowBottom-.04,rainbowBottom,rainbowY));`)
+  }
+  artworkMaterial.customProgramCacheKey=()=> 'averna-rainbow-mask-v1'
+  const artwork=new THREE.Mesh(new THREE.PlaneGeometry(1,1),artworkMaterial)"""
+assert hero_text.count(old_material) == 1, "Averna scene material changed"
+hero_text = hero_text.replace(old_material, new_material)
+hero.write_text(hero_text, encoding="utf-8")
