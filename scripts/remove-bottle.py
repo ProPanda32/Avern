@@ -343,3 +343,19 @@ new_spheres = """  const accents=[[-.88,-.58,2.4,.17,4],[.88,-.58,2.4,.17,4],[-.
 """
 assert garden_text.count(old_spheres) == 1, "Sphere layout changed in source"
 garden.write_text(garden_text.replace(old_spheres, new_spheres), encoding="utf-8")
+
+# Make the dedicated formation editor available through the existing Creator Studio.
+hero_text = hero.read_text(encoding="utf-8")
+old_creator = "const creatorMode=import.meta.env.DEV && new URLSearchParams(location.search).get('creator')==='1'"
+assert hero_text.count(old_creator) == 1, "Creator Studio gate changed in source"
+hero_text = hero_text.replace(old_creator, "const creatorMode=new URLSearchParams(location.search).get('creator')==='1'")
+import_anchor = "import { createCreatorStudio } from './creator-studio'"
+assert hero_text.count(import_anchor) == 1, "Creator Studio import changed in source"
+hero_text = hero_text.replace(import_anchor, import_anchor + "\nimport { createParticleCompositionEditor } from './particle-composition'")
+setup_anchor = "  const studio=creatorMode?createCreatorStudio(hero,config,next=>{config=next;applyConfig()}):undefined"
+assert hero_text.count(setup_anchor) == 1, "Creator Studio setup changed in source"
+hero_text = hero_text.replace(setup_anchor, setup_anchor + "\n  if(creatorMode)createParticleCompositionEditor(hero,scene,camera)")
+garden_anchor = "hero.dataset.particles=String(garden.count);"
+assert hero_text.count(garden_anchor) == 1, "Garden setup changed in source"
+hero_text = hero_text.replace(garden_anchor, "if(creatorMode)garden.root.getObjectByName('GPU botanical bead field')!.visible=false;" + garden_anchor)
+hero.write_text(hero_text, encoding="utf-8")
