@@ -44,7 +44,7 @@ function pointsFor(f:Formation,zones:Zone[]):Float32Array{
   for(let i=0;i<attempts&&out.length/3<target;i++){
     const t=(out.length/3+.5)/target,angle=random()*Math.PI*2
     let x=0,y=0,z=0
-    if(f.shape==='custom'&&f.custom.length){const p=f.custom[Math.floor(random()*f.custom.length)];x=p[0];y=p[1];z=p[2]}
+    if(f.shape==='custom'&&f.custom.length){const p=f.custom[Math.floor(random()*f.custom.length)];x=p[0]+(random()-.5)*.03;y=p[1]+(random()-.5)*.03;z=p[2]+(random()-.5)*.03}
     else if(f.shape==='ring'){const radius=.4+(random()-.5)*.16;x=Math.cos(angle)*radius;y=Math.sin(angle)*radius;z=(random()-.5)*.22}
     else if(f.shape==='arc'){const a=-Math.PI*.85+random()*Math.PI*1.7;x=Math.cos(a)*.5;y=Math.sin(a)*.5;z=(random()-.5)*.15}
     else if(f.shape==='spiral'){const a=t*Math.PI*8;x=Math.cos(a)*(.08+t*.45);y=Math.sin(a)*(.08+t*.45);z=t-.5}
@@ -65,6 +65,7 @@ function pointsFor(f:Formation,zones:Zone[]):Float32Array{
 const numberRow=(label:string,field:string,value:number,min:number,max:number,step=.05)=>`<label class="pc-row"><span>${label}</span><input type="range" data-field="${field}" min="${min}" max="${max}" step="${step}" value="${value}"><output>${value.toFixed(2)}</output></label>`
 export function createParticleCompositionEditor(host:HTMLElement,scene:THREE.Scene,camera:THREE.PerspectiveCamera){
   let state=clean(read(key)),presets=read(presetKey) as Record<string,State>|null
+  let selectedCustom=0
   if(!presets||typeof presets!=='object'||Array.isArray(presets))presets={}
   const rendered=new Map<string,THREE.Points>(),panel=document.createElement('aside')
   panel.className='pc-editor';panel.setAttribute('aria-label','Particle Composition Editor');host.append(panel)
@@ -134,7 +135,7 @@ export function createParticleCompositionEditor(host:HTMLElement,scene:THREE.Sce
     redraw();render();persist()
   })
   let dragging:{id:string;offset:THREE.Vector3;z:number}|undefined
-  const raycaster=new THREE.Raycaster();raycaster.params.Points.threshold=.12
+  const raycaster=new THREE.Raycaster();raycaster.layers.enable(WORLD);raycaster.params.Points.threshold=.12
   const pointer=(event:PointerEvent)=>{const box=host.getBoundingClientRect();return new THREE.Vector2((event.clientX-box.left)/box.width*2-1,-(event.clientY-box.top)/box.height*2+1)}
   const planePoint=(event:PointerEvent,z:number)=>{raycaster.setFromCamera(pointer(event),camera);const hit=new THREE.Vector3();return raycaster.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0,0,1),-z),hit)?hit:null}
   host.addEventListener('pointerdown',event=>{
@@ -145,7 +146,7 @@ export function createParticleCompositionEditor(host:HTMLElement,scene:THREE.Sce
     const id=hit.object.userData.formationId as string,f=state.formations.find(x=>x.id===id);if(!f)return
     state.selected=id;const at=planePoint(event,f.position[2]);if(!at)return
     dragging={id,offset:new THREE.Vector3(...f.position).sub(at),z:f.position[2]}
-    host.setPointerCapture(event.pointerId);render();redraw();event.preventDefault()
+    host.setPointerCapture(event.pointerId);render();redraw();event.preventDefault();event.stopImmediatePropagation()
   })
   host.addEventListener('pointermove',event=>{if(!dragging)return;const f=state.formations.find(x=>x.id===dragging!.id),at=planePoint(event,dragging.z);if(!f||!at)return;f.position[0]=at.x+dragging.offset.x;f.position[1]=at.y+dragging.offset.y;redraw();for(const axis of [0,1]){const input=panel.querySelector<HTMLInputElement>(`[data-field="position.${axis}"]`);if(input){input.value=String(f.position[axis]);input.nextElementSibling!.textContent=f.position[axis].toFixed(2)}}})
   const release=()=>{if(dragging){dragging=undefined;persist()}}
