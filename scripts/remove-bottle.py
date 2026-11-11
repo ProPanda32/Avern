@@ -440,3 +440,32 @@ new_material = """  const artworkMaterial=new THREE.MeshBasicMaterial({map:artwo
 assert hero_text.count(old_material) == 1, "Averna scene material changed"
 hero_text = hero_text.replace(old_material, new_material)
 hero.write_text(hero_text, encoding="utf-8")
+
+# Remove saturated ribbon pixels from the foreground logo copy, preserving
+# its light lettering while the rainbow remains solely in the 3D backdrop.
+hero_text = hero.read_text(encoding="utf-8")
+logo_anchor = "const hero=app.querySelector<HTMLElement>('.site-hero')!"
+logo_cleaner = """const logoArt=app.querySelector<HTMLImageElement>('.averna-hero-logo')!
+let logoCleaned=false
+const cleanLogo=()=>{
+  if(logoCleaned||!logoArt.naturalWidth)return
+  logoCleaned=true
+  const canvas=document.createElement('canvas')
+  canvas.width=logoArt.naturalWidth;canvas.height=logoArt.naturalHeight
+  const context=canvas.getContext('2d')!
+  context.drawImage(logoArt,0,0)
+  const pixels=context.getImageData(0,0,canvas.width,canvas.height)
+  for(let i=0;i<pixels.data.length;i+=4){
+    const red=pixels.data[i],green=pixels.data[i+1],blue=pixels.data[i+2]
+    const high=Math.max(red,green,blue),low=Math.min(red,green,blue)
+    if(high<150||high-low>110)pixels.data[i+3]=0
+  }
+  context.putImageData(pixels,0,0)
+  logoArt.src=canvas.toDataURL('image/png')
+}
+logoArt.addEventListener('load',cleanLogo,{once:true})
+if(logoArt.complete&&logoArt.naturalWidth)cleanLogo()
+"""
+assert hero_text.count(logo_anchor) == 1, "Logo setup anchor changed"
+hero_text = hero_text.replace(logo_anchor, logo_cleaner + logo_anchor)
+hero.write_text(hero_text, encoding="utf-8")
