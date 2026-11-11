@@ -38,6 +38,8 @@ jobs:
         run: npm run build
       - name: Include presentation slide image
         run: mkdir -p source/dist/assets && cp assets/the-problem-slide.png source/dist/assets/the-problem-slide.png
+      - name: Include Averna artwork
+        run: cp assets/averna-hero.png source/dist/assets/averna-hero.png
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload site
