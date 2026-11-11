@@ -98,10 +98,13 @@ hero_text = hero.read_text(encoding="utf-8")
 load_anchor = "  let config=loadConfig(creatorMode)\n"
 load_extra = """  let config=loadConfig(creatorMode)
   const particleStoreKey='avern.particles.v1'
+  const spreadStoreKey='avern.particle.spread.v1'
+  const savedSpread=Number(localStorage.getItem(spreadStoreKey))
+  let particleSpread=Number.isFinite(savedSpread)&&savedSpread>=.6&&savedSpread<=1.6?savedSpread:1
   try {
     const saved=JSON.parse(localStorage.getItem(particleStoreKey)||'null') as Record<string,number>|null
     if(saved)for(const key of ['count','size','opacity','brightness','speed','ambientSpeed','repulsion','radius','mossStrength'] as const){
-      if(typeof saved[key]==='number'&&Number.isFinite(saved[key]))config.particles[key]=saved[key]
+      if(typeof saved[key]==='number'&&Number.isFinite(saved[key]))config.particles[key]=key==='ambientSpeed'?Math.max(0,Math.min(2,saved[key])):saved[key]
     }
   } catch { /* Use the original composition when no saved settings exist. */ }
 """
@@ -121,7 +124,7 @@ panel_extra = """  resize();rebuildGarden()
     ['Opacity','opacity',0,1,.05],
     ['Brightness','brightness',0,4,.05],
     ['Interaction speed','speed',0,4,.05],
-    ['Continuous motion','ambientSpeed',0,5,.05],
+    ['Continuous motion','ambientSpeed',0,2,.05],
     ['Cursor response','repulsion',0,5,.05],
     ['Response radius','radius',.1,4,.05],
     ['Green detail','mossStrength',0,4,.05],
@@ -147,6 +150,22 @@ panel_extra = """  resize();rebuildGarden()
     particlePanel.append(row)
     particleInputs[key]=input
   }
+  const spreadRow=document.createElement('label')
+  spreadRow.className='avern-particle-row'
+  const spreadName=document.createElement('span')
+  spreadName.textContent='Composition spread'
+  const spreadInput=document.createElement('input')
+  spreadInput.type='range';spreadInput.min='.6';spreadInput.max='1.6';spreadInput.step='.05';spreadInput.value=String(particleSpread)
+  const spreadValue=document.createElement('output')
+  spreadValue.textContent=spreadInput.value
+  spreadInput.addEventListener('change',()=>{
+    particleSpread=Number(spreadInput.value)
+    spreadValue.textContent=spreadInput.value
+    try{localStorage.setItem(spreadStoreKey,spreadInput.value)}catch{}
+    rebuildGarden()
+  })
+  spreadRow.append(spreadName,spreadInput,spreadValue)
+  particlePanel.append(spreadRow)
   const resetParticles=document.createElement('button')
   resetParticles.type='button';resetParticles.textContent='Reset particles'
   resetParticles.addEventListener('click',()=>{
@@ -156,14 +175,18 @@ panel_extra = """  resize();rebuildGarden()
       input.value=String(config.particles[key])
       input.nextElementSibling!.textContent=input.value
     }
-    try{localStorage.removeItem(particleStoreKey)}catch{}
-    applyConfig()
+    particleSpread=1;spreadInput.value='1';spreadValue.textContent='1'
+    try{localStorage.removeItem(particleStoreKey);localStorage.removeItem(spreadStoreKey)}catch{}
+    rebuildGarden()
   })
   particlePanel.append(resetParticles)
   hero.append(particlePanel)
 """
 assert hero_text.count(panel_anchor) == 1, "Garden setup anchor changed"
 hero_text = hero_text.replace(panel_anchor, panel_extra)
+old_garden_call='config.particles.count);hero.dataset.particles'
+assert hero_text.count(old_garden_call) == 1, 'Garden call changed in source'
+hero_text = hero_text.replace(old_garden_call,'config.particles.count,particleSpread);hero.dataset.particles')
 hero.write_text(hero_text, encoding="utf-8")
 hero_css.write_text(
     hero_css.read_text(encoding="utf-8")
@@ -205,7 +228,7 @@ hero_css.write_text(
 garden = Path("source/src/garden.ts")
 garden_text = garden.read_text(encoding="utf-8")
 old_drift = "p+=vec3(sin(time*ambientSpeed*.18+p.y*3.),cos(time*ambientSpeed*.13+p.x*2.),0.)*.009;"
-new_drift = "p+=vec3(sin(time*ambientSpeed*.42+p.y*3.),cos(time*ambientSpeed*.34+p.x*2.),sin(time*ambientSpeed*.28+p.z*2.))*(ambientSpeed*.026);"
+new_drift = "p+=vec3(sin(time*ambientSpeed*.22+p.y*3.),cos(time*ambientSpeed*.18+p.x*2.),sin(time*ambientSpeed*.15+p.z*2.))*(ambientSpeed*.016);"
 assert garden_text.count(old_drift) == 1, "Particle drift shader changed in source"
 garden_text = garden_text.replace(old_drift, new_drift)
 old_tick = """      for(const {mesh,home,phase} of spheres){
@@ -216,16 +239,22 @@ old_tick = """      for(const {mesh,home,phase} of spheres){
       }
 """
 new_tick = """      const drift=reduced?0:ambientSpeed.value
-      moss.position.set(Math.sin(seconds*.31*drift)*.045*drift,Math.cos(seconds*.23*drift)*.026*drift,0)
-      leaves.position.set(Math.sin(seconds*.27*drift+1.3)*.038*drift,Math.cos(seconds*.19*drift+.6)*.032*drift,0)
-      branches.position.set(Math.sin(seconds*.21*drift+.8)*.018*drift,Math.cos(seconds*.17*drift)*.018*drift,0)
-      beads.position.set(Math.sin(seconds*.36*drift+2.1)*.028*drift,Math.cos(seconds*.29*drift)*.02*drift,0)
+      moss.position.set(Math.sin(seconds*.18*drift)*.025*drift,Math.cos(seconds*.14*drift)*.016*drift,0)
+      leaves.position.set(Math.sin(seconds*.16*drift+1.3)*.022*drift,Math.cos(seconds*.12*drift+.6)*.018*drift,0)
+      branches.position.set(Math.sin(seconds*.13*drift+.8)*.012*drift,Math.cos(seconds*.11*drift)*.012*drift,0)
+      beads.position.set(Math.sin(seconds*.2*drift+2.1)*.018*drift,Math.cos(seconds*.16*drift)*.014*drift,0)
       for(const {mesh,home,phase} of spheres){
         if(!mesh.visible)continue
         mesh.position.copy(home)
         const options=mesh.userData.settings as SphereTransform|undefined
-        if(drift>0){mesh.position.y+=Math.sin(seconds*.3*drift*(options?.floatSpeed??1)+phase)*.012*drift;mesh.rotation.y+=delta*.025*drift*(options?.floatSpeed??1)}
+        if(drift>0){mesh.position.y+=Math.sin(seconds*.18*drift*(options?.floatSpeed??1)+phase)*.008*drift;mesh.rotation.y+=delta*.014*drift*(options?.floatSpeed??1)}
       }
 """
 assert garden_text.count(old_tick) == 1, "Garden animation loop changed in source"
-garden.write_text(garden_text.replace(old_tick, new_tick), encoding="utf-8")
+garden_text = garden_text.replace(old_tick, new_tick)
+old_signature = "compact: boolean, density=1) {"
+assert garden_text.count(old_signature) == 1, "Garden signature changed in source"
+garden_text = garden_text.replace(old_signature, "compact: boolean, density=1, spreadFactor=1) {")
+old_spread = "spread:r(.075,.20)"
+assert garden_text.count(old_spread) == 1, "Garden cluster spread changed in source"
+garden.write_text(garden_text.replace(old_spread, "spread:r(.075,.20)*spreadFactor"), encoding="utf-8")
