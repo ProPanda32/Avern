@@ -359,3 +359,19 @@ garden_anchor = "hero.dataset.particles=String(garden.count);"
 assert hero_text.count(garden_anchor) == 1, "Garden setup changed in source"
 hero_text = hero_text.replace(garden_anchor, "if(creatorMode)garden.root.getObjectByName('GPU botanical bead field')!.visible=false;" + garden_anchor)
 hero.write_text(hero_text, encoding="utf-8")
+
+# Place the supplied transparent Averna artwork over the existing landing scene.
+hero_text = hero.read_text(encoding="utf-8")
+art_anchor = '      <div class="scene-layer" aria-hidden="true"></div>'
+assert hero_text.count(art_anchor) == 1, "Hero scene markup changed in source"
+hero_text = hero_text.replace(art_anchor, art_anchor + '\n      <img class="averna-hero-art" src="/Avern/assets/averna-hero.png" alt="AVERNA — Design, Create, Innovate">')
+hero.write_text(hero_text, encoding="utf-8")
+hero_css.write_text(
+    hero_css.read_text(encoding="utf-8")
+    + """
+.averna-hero-art{position:absolute;z-index:4;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,1400px);max-height:82svh;object-fit:contain;pointer-events:none;filter:drop-shadow(0 12px 32px #0008)}
+.site-hero .hero-copy{display:none}
+@media(max-width:700px){.averna-hero-art{width:105vw;max-height:70svh}}
+""",
+    encoding="utf-8",
+)
