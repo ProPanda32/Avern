@@ -233,7 +233,7 @@ panel_extra = """  resize();rebuildGarden()
     rebuildGarden()
   })
   particlePanel.append(resetParticles)
-  if(!creatorMode)hero.append(particlePanel)
+  hero.append(particlePanel)
 """
 assert hero_text.count(panel_anchor) == 1, "Garden setup anchor changed"
 hero_text = hero_text.replace(panel_anchor, panel_extra)
@@ -368,10 +368,10 @@ assert hero_text.count(import_anchor) == 1, "Creator Studio import changed in so
 hero_text = hero_text.replace(import_anchor, import_anchor + "\nimport { createParticleCompositionEditor } from './particle-composition'")
 setup_anchor = "  const studio=creatorMode?createCreatorStudio(hero,config,next=>{config=next;applyConfig()}):undefined"
 assert hero_text.count(setup_anchor) == 1, "Creator Studio setup changed in source"
-hero_text = hero_text.replace(setup_anchor, setup_anchor + "\n  if(creatorMode)createParticleCompositionEditor(hero,scene,camera)")
+hero_text = hero_text.replace(setup_anchor, "  const studio=undefined as ReturnType<typeof createCreatorStudio>|undefined\n  if(creatorMode)createParticleCompositionEditor(hero,scene,camera)")
 garden_anchor = "hero.dataset.particles=String(garden.count);"
 assert hero_text.count(garden_anchor) == 1, "Garden setup changed in source"
-hero_text = hero_text.replace(garden_anchor, "if(creatorMode)garden.root.getObjectByName('GPU botanical bead field')!.visible=false;" + garden_anchor)
+# Keep the garden visible so its density, colour and motion settings affect the scene.
 hero.write_text(hero_text, encoding="utf-8")
 
 # Place the supplied transparent Averna artwork over the existing landing scene.
