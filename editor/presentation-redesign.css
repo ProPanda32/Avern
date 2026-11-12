@@ -60,3 +60,13 @@
 .original-slide-image img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:contain}
 .original-slide-image:focus-visible{outline:3px solid #e8c994;outline-offset:5px}
 @media(max-width:600px){.original-slide-header,.original-slide-footer{padding:12px 15px;font-size:8px}.original-slide-footer span:first-child{max-width:70%}.original-slide-image{width:calc(100% - 20px);margin:10px auto}}
+
+/* Branded editorial chapter above the full, unaltered PowerPoint page. */
+.combined-slide{background:radial-gradient(circle at 87% 8%,color-mix(in srgb,var(--slide-accent),transparent 78%),transparent 38%),#0b191b;border-color:color-mix(in srgb,var(--slide-accent),#1d2d2b 62%)}
+.combined-slide::after{content:"";position:absolute;top:35px;right:-105px;width:min(36vw,440px);aspect-ratio:1;border:1px solid color-mix(in srgb,var(--slide-accent),transparent 60%);border-radius:50%;box-shadow:0 0 0 54px #ffffff04,0 0 0 110px #ffffff02;pointer-events:none}
+.combined-slide-feature{position:relative;z-index:1;padding:clamp(35px,5vw,78px) clamp(25px,5vw,80px) clamp(40px,5vw,70px);min-height:270px;display:flex;flex-direction:column;justify-content:center}
+.combined-slide-eyebrow{color:var(--slide-accent);font:700 11px 'DM Sans',Arial,sans-serif;letter-spacing:.24em;text-transform:uppercase;margin-bottom:19px}
+.combined-slide-feature h2{color:#f7f9f2;font:800 clamp(40px,6vw,86px)/1.04 'Manrope',Arial,sans-serif;letter-spacing:-.065em;max-width:950px;margin:0;text-wrap:balance}
+.combined-slide-feature p{color:#c3d1cb;font:500 clamp(13px,1.3vw,18px)/1.4 'DM Sans',Arial,sans-serif;margin:21px 0 0}
+.combined-slide .original-slide-image{position:relative;z-index:1}
+@media(max-width:600px){.combined-slide-feature{padding:38px 22px 42px;min-height:210px}.combined-slide-feature h2{font-size:clamp(35px,10vw,54px)}.combined-slide-feature p{font-size:13px}}
