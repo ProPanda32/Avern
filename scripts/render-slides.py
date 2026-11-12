@@ -12,12 +12,14 @@ output.mkdir(parents=True, exist_ok=True)
 
 with tempfile.TemporaryDirectory() as temp:
     work = Path(temp)
+    styled = work / 'styled.pptx'
+    subprocess.run([sys.executable, 'scripts/style-slide-backgrounds.py', str(source), str(styled)], check=True)
     subprocess.run(
         ["libreoffice", f"-env:UserInstallation=file://{work / 'profile'}",
-         "--headless", "--convert-to", "pdf", "--outdir", str(work), str(source)],
+         "--headless", "--convert-to", "pdf", "--outdir", str(work), str(styled)],
         check=True,
     )
-    pdf = work / (source.stem + ".pdf")
+    pdf = work / 'styled.pdf'
     if not pdf.is_file():
         raise SystemExit("PowerPoint conversion did not produce a PDF")
     slide_text = subprocess.run(["pdftotext", "-layout", str(pdf), "-"], check=True, capture_output=True, text=True).stdout
