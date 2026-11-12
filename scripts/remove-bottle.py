@@ -115,6 +115,7 @@ load_extra = """  let config=loadConfig(creatorMode)
   const spreadStoreKey='avern.particle.spread.v1'
   const gapStoreKey='avern.particle.gap.v1'
   const motionStoreKey='avern.particle.motion.v1'
+  const greenBrightnessKey='avern.particle.green-brightness.v1'
   const sceneToneKey='avern.scene.tone.v1'
   let sceneTone={hue:0,saturation:1,temperature:0,light:1}
   try {
@@ -128,7 +129,9 @@ load_extra = """  let config=loadConfig(creatorMode)
   const savedGap=Number(localStorage.getItem(gapStoreKey))
   let particleGap=Number.isFinite(savedGap)&&savedGap>=.7&&savedGap<=1.4?savedGap:1
   const savedMotion=Number(localStorage.getItem(motionStoreKey))
-  let particleMotionAmount=Number.isFinite(savedMotion)&&savedMotion>=0&&savedMotion<=2?savedMotion:0
+  let particleMotionAmount=Number.isFinite(savedMotion)&&savedMotion>=0&&savedMotion<=6?savedMotion:0
+  const savedGreenBrightness=Number(localStorage.getItem(greenBrightnessKey))
+  let greenBrightness=Number.isFinite(savedGreenBrightness)&&savedGreenBrightness>=0&&savedGreenBrightness<=5?savedGreenBrightness:0
   try {
     const saved=JSON.parse(localStorage.getItem(particleStoreKey)||'null') as Record<string,number>|null
     if(saved)for(const key of ['count','size','opacity','brightness','speed','ambientSpeed','repulsion','radius','mossStrength'] as const){
@@ -215,7 +218,7 @@ panel_extra = """  resize();rebuildGarden()
   const motionName=document.createElement('span')
   motionName.textContent='Motion amount'
   const motionInput=document.createElement('input')
-  motionInput.type='range';motionInput.min='0';motionInput.max='2';motionInput.step='.05';motionInput.value=String(particleMotionAmount)
+  motionInput.type='range';motionInput.min='0';motionInput.max='6';motionInput.step='.05';motionInput.value=String(particleMotionAmount)
   const motionValue=document.createElement('output')
   motionValue.textContent=motionInput.value
   motionInput.addEventListener('input',()=>{
@@ -225,6 +228,12 @@ panel_extra = """  resize();rebuildGarden()
   })
   motionRow.append(motionName,motionInput,motionValue)
   particlePanel.append(motionRow)
+  const greenRow=document.createElement('label');greenRow.className='avern-particle-row'
+  const greenName=document.createElement('span');greenName.textContent='Green brightness'
+  const greenInput=document.createElement('input');greenInput.type='range';greenInput.min='0';greenInput.max='5';greenInput.step='.05';greenInput.value=String(greenBrightness)
+  const greenValue=document.createElement('output');greenValue.textContent=greenInput.value
+  greenInput.addEventListener('input',()=>{greenBrightness=Number(greenInput.value);greenValue.textContent=greenInput.value;garden?.setGreenBrightness(greenBrightness);try{localStorage.setItem(greenBrightnessKey,greenInput.value)}catch{}})
+  greenRow.append(greenName,greenInput,greenValue);particlePanel.append(greenRow)
   const resetParticles=document.createElement('button')
   resetParticles.type='button';resetParticles.textContent='Reset particles'
   resetParticles.addEventListener('click',()=>{
@@ -237,7 +246,8 @@ panel_extra = """  resize();rebuildGarden()
     particleSpread=1;spreadInput.value='1';spreadValue.textContent='1'
     particleGap=1;gapInput.value='1';gapValue.textContent='1'
     particleMotionAmount=0;motionInput.value='0';motionValue.textContent='0'
-    try{localStorage.removeItem(particleStoreKey);localStorage.removeItem(spreadStoreKey);localStorage.removeItem(gapStoreKey);localStorage.removeItem(motionStoreKey)}catch{}
+    greenBrightness=0;greenInput.value='0';greenValue.textContent='0'
+    try{localStorage.removeItem(particleStoreKey);localStorage.removeItem(spreadStoreKey);localStorage.removeItem(gapStoreKey);localStorage.removeItem(motionStoreKey);localStorage.removeItem(greenBrightnessKey)}catch{}
     rebuildGarden()
   })
   particlePanel.append(resetParticles)
@@ -373,7 +383,7 @@ assert garden_text.count(old_declaration) == 1, "Particle shader uniforms change
 garden_text = garden_text.replace(old_declaration, "sizeMultiplier,ambientSpeed,ambientStrength,hoverActive")
 old_return = "    count, root, spheres, syncSpheres, probeMoss,"
 assert garden_text.count(old_return) == 1, "Garden controls changed in source"
-garden_text = garden_text.replace(old_return, "    count, root, spheres, syncSpheres, probeMoss,\n    setMotionAmount(value:number){motionAmount=value;material.uniforms.ambientStrength.value=value},")
+garden_text = garden_text.replace(old_return, "    count, root, spheres, syncSpheres, probeMoss,\n    setMotionAmount(value:number){motionAmount=value;material.uniforms.ambientStrength.value=value},\n    setGreenBrightness(value:number){mossMaterial.emissive.set('#79ff4e');mossMaterial.emissiveIntensity=value;mossOrb.emissive.set('#79ff4e');mossOrb.emissiveIntensity=value},")
 old_spheres = """  const accents=[[-.99,-.62,2.65,.23,4],[1.02,-.86,2.7,.24,4],[-.68,-.85,2.45,.16,1],
     [.84,-.61,1.8,.16,3],[-.49,.43,-.15,.13,0],[.62,.02,-.8,.10,4],
     [.35,-.37,.1,.10,4],[-.54,-.34,-.25,.09,4],[.87,.26,-.6,.10,1],[-.72,.28,-.6,.07,4]]
@@ -421,6 +431,7 @@ assert hero_text.count(setup_anchor) == 1, "Creator Studio setup changed in sour
 hero_text = hero_text.replace(setup_anchor, "  const studio=undefined as ReturnType<typeof createCreatorStudio>|undefined\n  if(creatorMode)createParticleCompositionEditor(hero,scene,camera)")
 garden_anchor = "hero.dataset.particles=String(garden.count);"
 assert hero_text.count(garden_anchor) == 1, "Garden setup changed in source"
+hero_text = hero_text.replace(garden_anchor, "garden.setGreenBrightness(greenBrightness);" + garden_anchor)
 # Keep the garden visible so its density, colour and motion settings affect the scene.
 hero.write_text(hero_text, encoding="utf-8")
 
@@ -496,7 +507,7 @@ new_material = """  const artworkMaterial=new THREE.MeshBasicMaterial({map:artwo
       diffuseColor.a*=smoothstep(rainbowTop,rainbowTop+.035,rainbowY)
         *(1.0-smoothstep(rainbowBottom-.04,rainbowBottom,rainbowY))
         *smoothstep(.18,.38,rainbowChroma)
-        *smoothstep(.08,.22,rainbowX)
+        *smoothstep(.22,.42,rainbowX)
         *(1.0-smoothstep(.84,.96,rainbowX));`)
   }
   artworkMaterial.customProgramCacheKey=()=> 'averna-rainbow-mask-v1'
