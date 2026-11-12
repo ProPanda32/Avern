@@ -564,3 +564,28 @@ hero_css.write_text(
 
 # Hide the creator controls while preserving the rendered scene and saved values.
 hero_css.write_text(hero_css.read_text(encoding="utf-8") + "\n.avern-particle-settings, .avern-scene-settings, .pc-editor, .pc-open { display: none !important; }\n", encoding="utf-8")
+
+# A one-second entrance vortex; it is decorative and never blocks interaction afterward.
+hero_text = hero.read_text(encoding="utf-8")
+vortex_anchor = "const hero=app.querySelector<HTMLElement>('.site-hero')!"
+vortex_setup = """const entranceVortex=document.createElement('div')
+entranceVortex.className='avern-entrance-vortex'
+entranceVortex.setAttribute('aria-hidden','true')
+entranceVortex.innerHTML='<div class="avern-vortex-swirl"></div><div class="avern-vortex-core"></div>'
+document.body.append(entranceVortex)
+entranceVortex.addEventListener('animationend',event=>{
+  if(event.target===entranceVortex)entranceVortex.remove()
+})
+window.setTimeout(()=>entranceVortex.remove(),1150)
+"""
+assert hero_text.count(vortex_anchor)==1, "Vortex insertion anchor changed"
+hero.write_text(hero_text.replace(vortex_anchor,vortex_setup+vortex_anchor),encoding="utf-8")
+hero_css.write_text(hero_css.read_text(encoding="utf-8")+"""
+.avern-entrance-vortex{position:fixed;inset:0;z-index:2147483646;overflow:hidden;pointer-events:none;background:#060b0a;animation:avern-vortex-exit 1s cubic-bezier(.65,.05,.25,1) both}
+.avern-vortex-swirl{position:absolute;inset:-75vmax;transform-origin:center;background:repeating-conic-gradient(from 25deg at 50% 50%,#091713 0deg,#234c40 12deg,#bfa16b 22deg,#101e19 33deg,#070d0b 45deg);filter:blur(16px);animation:avern-vortex-spin 1s cubic-bezier(.12,.7,.3,1) both}
+.avern-vortex-core{position:absolute;left:50%;top:50%;width:20vmin;height:20vmin;border-radius:50%;transform:translate(-50%,-50%);background:radial-gradient(circle,#f5e1ac 0%,#b78b54 15%,#152c25 42%,transparent 72%);box-shadow:0 0 100px 45px #c49b6580;animation:avern-vortex-flash 1s ease-out both}
+@keyframes avern-vortex-spin{0%{transform:rotate(-110deg) scale(1.4)}100%{transform:rotate(250deg) scale(.08)}}
+@keyframes avern-vortex-flash{0%{opacity:.3;scale:.2}55%{opacity:1;scale:1.8}100%{opacity:0;scale:8}}
+@keyframes avern-vortex-exit{0%,48%{opacity:1}100%{opacity:0;visibility:hidden}}
+@media(prefers-reduced-motion:reduce){.avern-entrance-vortex{display:none!important}}
+""",encoding="utf-8")
