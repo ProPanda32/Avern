@@ -19,7 +19,7 @@ export function mountPresentation(app:HTMLElement){
       image.alt='Original Averna PowerPoint slide '+(index+1)
       image.loading=index===0?'eager':'lazy'
       button.append(image)
-      button.addEventListener('click',()=>{viewerImage.src=image.src;viewerImage.alt=image.alt;viewer.style.backgroundColor=getComputedStyle(button).backgroundColor;viewerImage.style.mixBlendMode='multiply';viewer.showModal()})
+      button.addEventListener('click',()=>{viewerImage.src=image.src;viewerImage.alt=image.alt;viewer.style.backgroundColor='#071719';viewerImage.style.mixBlendMode='normal';viewer.showModal()})
       list.append(button)
     })
   }).catch(error=>{console.error(error);list.textContent='Presentation slides could not load.'})
