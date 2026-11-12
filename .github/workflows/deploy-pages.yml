@@ -26,6 +26,8 @@ jobs:
         run: cp editor/particle-composition.ts source/src/particle-composition.ts && cp editor/particle-composition.css source/src/particle-composition.css
       - name: Remove only the bottle model
         run: python scripts/remove-bottle.py
+      - name: Fix Creator Studio controls
+        run: python scripts/fix-creator.py
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
