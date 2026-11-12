@@ -467,9 +467,9 @@ hero_text = hero_text.replace(art_setup_anchor, art_setup)
 old_resize = "renderer.setSize(w,h,false);frame()"
 assert hero_text.count(old_resize) == 1, "Hero resize changed"
 hero_text = hero_text.replace(old_resize, "renderer.setSize(w,h,false);fitArtwork();frame()")
-old_camera_update = "camera.updateProjectionMatrix()\n    renderer.domElement.style.filter"
+old_camera_update = "camera.updateProjectionMatrix()\n    applySceneTone()"
 assert hero_text.count(old_camera_update) == 1, "Camera config changed"
-hero_text = hero_text.replace(old_camera_update, "camera.updateProjectionMatrix();fitArtwork()\n    renderer.domElement.style.filter")
+hero_text = hero_text.replace(old_camera_update, "camera.updateProjectionMatrix();fitArtwork()\n    applySceneTone()")
 hero.write_text(hero_text, encoding="utf-8")
 hero_css.write_text(
     hero_css.read_text(encoding="utf-8")
