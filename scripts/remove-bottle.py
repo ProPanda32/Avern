@@ -485,7 +485,7 @@ hero.write_text(hero_text, encoding="utf-8")
 hero_css.write_text(
     hero_css.read_text(encoding="utf-8")
     + """
-.averna-hero-logo{clip-path:polygon(12% 20%,68% 20%,68% 56%,12% 56%)}
+.averna-hero-logo{clip-path:polygon(12% 20%,68% 20%,68% 56%,18% 56%,18% 43%,12% 43%)}
 .averna-hero-flower{clip-path:polygon(66% 12%,88% 12%,88% 52%,66% 52%)}
 """,
     encoding="utf-8",
@@ -507,7 +507,7 @@ new_material = """  const artworkMaterial=new THREE.MeshBasicMaterial({map:artwo
       diffuseColor.a*=smoothstep(rainbowTop,rainbowTop+.035,rainbowY)
         *(1.0-smoothstep(rainbowBottom-.04,rainbowBottom,rainbowY))
         *smoothstep(.18,.38,rainbowChroma)
-        *smoothstep(.42,.55,rainbowX)
+        *smoothstep(.08,.22,rainbowX)
         *(1.0-smoothstep(.84,.96,rainbowX));`)
   }
   artworkMaterial.customProgramCacheKey=()=> 'averna-rainbow-mask-v1'
