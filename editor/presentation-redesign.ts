@@ -15,7 +15,7 @@ export function mountPresentation(app:HTMLElement){
       button.setAttribute('role','listitem')
       button.setAttribute('aria-label','Open original presentation slide '+(index+1))
       const image=document.createElement('img')
-      image.src='/Avern/slides/'+encodeURIComponent(file)
+      image.src='/Avern/slides/'+encodeURIComponent(file)+'?v=gradient-1'
       image.alt='Original Averna PowerPoint slide '+(index+1)
       image.loading=index===0?'eager':'lazy'
       button.append(image)
