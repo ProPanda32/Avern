@@ -63,12 +63,17 @@ function pointsFor(f:Formation,zones:Zone[]):Float32Array{
   return new Float32Array(out)
 }
 const numberRow=(label:string,field:string,value:number,min:number,max:number,step=.05)=>`<label class="pc-row"><span>${label}</span><input type="range" data-field="${field}" min="${min}" max="${max}" step="${step}" value="${value}"><output>${value.toFixed(2)}</output></label>`
-export function createParticleCompositionEditor(host:HTMLElement,scene:THREE.Scene,camera:THREE.PerspectiveCamera){
+export function createParticleCompositionEditor(host:HTMLElement,scene:THREE.Scene,camera:THREE.PerspectiveCamera,editable=true){
   let state=clean(read(key)),presets=read(presetKey) as Record<string,State>|null
   let selectedCustom=0
   if(!presets||typeof presets!=='object'||Array.isArray(presets))presets={}
   const rendered=new Map<string,THREE.Points>(),panel=document.createElement('aside')
   panel.className='pc-editor';panel.setAttribute('aria-label','Particle Composition Editor');host.append(panel)
+  if(!editable)panel.hidden=true
+  const toggle=document.createElement('button')
+  toggle.className='pc-open';toggle.type='button';toggle.textContent='Particle composition';toggle.hidden=!editable
+  toggle.addEventListener('click',()=>{panel.hidden=false;toggle.hidden=true})
+  host.append(toggle)
   const persist=()=>save(key,state)
   const redraw=()=>{
     for(const p of rendered.values()){scene.remove(p);p.geometry.dispose();(p.material as THREE.Material).dispose()}
@@ -107,12 +112,12 @@ export function createParticleCompositionEditor(host:HTMLElement,scene:THREE.Sce
     if(f){panel.querySelector<HTMLSelectElement>('[data-field="shape"]')!.value=f.shape;panel.querySelector<HTMLSelectElement>('[data-field="layer"]')!.value=f.layer;panel.querySelector<HTMLSelectElement>('[data-field="gradient"]')!.value=f.gradient;const points=panel.querySelector<HTMLSelectElement>('[data-action="point"]');if(points){f.custom.forEach((_,i)=>points.add(new Option('Point '+(i+1),String(i))));selectedCustom=Math.min(selectedCustom,f.custom.length-1);points.value=String(selectedCustom)}}
   }
   const change=(field:string,value:string)=>{
+    if(field.startsWith('zone.')){const z=state.zones.find(v=>v.id===state.selectedZone);if(!z)return;const part=field.split('.')[1];if(part==='radius')z.radius=Number(value);else z.center[Number(part)]=Number(value);redraw();persist();return}
     const f=selected();if(!f)return
     if(field==='shape')f.shape=value as Shape
     else if(field==='layer'){f.layer=value as Layer;f.position[2]=value==='foreground'?2:value==='background'?-3:0}
     else if(field==='gradient')f.gradient=value as Gradient
     else if(field.startsWith('custom.')){const point=f.custom[selectedCustom];if(!point)return;point[Number(field.split('.')[1])]=Number(value)}
-    else if(field.startsWith('zone.')){const z=state.zones.find(v=>v.id===state.selectedZone);if(!z)return;const part=field.split('.')[1];if(part==='radius')z.radius=Number(value);else z.center[Number(part)]=Number(value)}
     else if(field.includes('.')){const [part,index]=field.split('.');(f[part as 'position'|'dimensions'|'rotation'|'focus'] as Vec)[Number(index)]=Number(value)}
     else if(field==='count'||field==='distribution'||field==='spacing')f[field]=Number(value)
     redraw();persist()
@@ -122,7 +127,7 @@ export function createParticleCompositionEditor(host:HTMLElement,scene:THREE.Sce
   panel.addEventListener('click',event=>{
     const action=(event.target as HTMLElement).closest<HTMLButtonElement>('button[data-action]')?.dataset.action;if(!action)return
     const f=selected()
-    if(action==='close'){panel.hidden=true;return}
+    if(action==='close'){panel.hidden=true;toggle.hidden=false;return}
     if(action==='add'){const next=fresh('Formation '+(state.formations.length+1));state.formations.push(next);state.selected=next.id}
     if(action==='duplicate'&&f){const copy=structuredClone(f);copy.id=uid();copy.name=f.name+' copy';copy.position[0]+=.3;state.formations.push(copy);state.selected=copy.id}
     if(action==='delete'&&f){state.formations=state.formations.filter(v=>v.id!==f.id);state.selected=state.formations[0]?.id??''}
@@ -141,7 +146,7 @@ export function createParticleCompositionEditor(host:HTMLElement,scene:THREE.Sce
   const pointer=(event:PointerEvent)=>{const box=host.getBoundingClientRect();return new THREE.Vector2((event.clientX-box.left)/box.width*2-1,-(event.clientY-box.top)/box.height*2+1)}
   const planePoint=(event:PointerEvent,z:number)=>{raycaster.setFromCamera(pointer(event),camera);const hit=new THREE.Vector3();return raycaster.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0,0,1),-z),hit)?hit:null}
   host.addEventListener('pointerdown',event=>{
-    if(panel.hidden||panel.contains(event.target as Node)||!panel.querySelector<HTMLInputElement>('[data-action="drag"]')?.checked)return
+    if(!editable||panel.hidden||panel.contains(event.target as Node)||!panel.querySelector<HTMLInputElement>('[data-action="drag"]')?.checked)return
     raycaster.setFromCamera(pointer(event),camera)
     const hit=raycaster.intersectObjects([...rendered.values()])[0]
     if(!hit)return
@@ -153,6 +158,6 @@ export function createParticleCompositionEditor(host:HTMLElement,scene:THREE.Sce
   host.addEventListener('pointermove',event=>{if(!dragging)return;const f=state.formations.find(x=>x.id===dragging!.id),at=planePoint(event,dragging.z);if(!f||!at)return;f.position[0]=at.x+dragging.offset.x;f.position[1]=at.y+dragging.offset.y;redraw();for(const axis of [0,1]){const input=panel.querySelector<HTMLInputElement>(`[data-field="position.${axis}"]`);if(input){input.value=String(f.position[axis]);input.nextElementSibling!.textContent=f.position[axis].toFixed(2)}}})
   const release=()=>{if(dragging){dragging=undefined;persist()}}
   host.addEventListener('pointerup',release);host.addEventListener('pointercancel',release)
-  redraw();render()
-  return {open(){panel.hidden=false},dispose(){for(const p of rendered.values()){scene.remove(p);p.geometry.dispose();(p.material as THREE.Material).dispose()}panel.remove()}}
+  if(editable){redraw();render()}else if(localStorage.getItem(key)){redraw()}
+  return {hasSavedComposition(){return localStorage.getItem(key)!==null},open(){panel.hidden=false;toggle.hidden=true},dispose(){for(const p of rendered.values()){scene.remove(p);p.geometry.dispose();(p.material as THREE.Material).dispose()}panel.remove();toggle.remove()}}
 }
