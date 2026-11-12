@@ -17,7 +17,8 @@ export function mountPresentation(app:HTMLElement){
   const list=app.querySelector<HTMLElement>('.presentation-slides')!
   const viewer=app.querySelector<HTMLDialogElement>('#deck-viewer')!
   const viewerImage=viewer.querySelector<HTMLImageElement>('img')!
-  const esc=(value:string)=>value.replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]!))
+  const entities:Record<string,string>={'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}
+  const esc=(value:string)=>value.replace(/[&<>"']/g,char=>entities[char])
   const image=(index:number)=>'/Avern/slides/slide-'+(index+1)+'.png'
   slides.forEach((slide,index)=>{
     const card=document.createElement('article')
