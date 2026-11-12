@@ -44,6 +44,8 @@ jobs:
             sudo apt-get update -qq
             sudo apt-get install -y -qq libreoffice-impress poppler-utils
           fi
+      - name: Install slide styling tools
+        run: python -m pip install --user python-pptx pillow
       - name: Render uploaded presentation
         run: python scripts/render-slides.py "Averna Presentation.pptx" source/dist/slides
       - name: Include Averna artwork
