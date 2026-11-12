@@ -33,4 +33,7 @@ slides = sorted(output.glob("slide-*.png"), key=lambda p: int(p.stem.split("-")[
 if not slides:
     raise SystemExit("No slide images were rendered")
 (output / "manifest.json").write_text(json.dumps([p.name for p in slides]), encoding="utf-8")
+from PIL import Image
+with Image.open(slides[1]) as preview:
+    print(f"SLIDE_2_PIXELS corners={preview.getpixel((10,10))},{preview.getpixel((preview.width-10,10))} center={preview.getpixel((preview.width//2,preview.height//2))}")
 print(f"Rendered {len(slides)} presentation slides")
