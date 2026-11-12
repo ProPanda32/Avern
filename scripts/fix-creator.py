@@ -7,7 +7,7 @@ new = "  const compositionEditor=createParticleCompositionEditor(hero,scene,came
 assert text.count(old) == 1
 text = text.replace(old,new)
 old = "if(creatorMode)garden.root.getObjectByName('GPU botanical bead field')!.visible=false;"
-new = "garden.root.getObjectByName('GPU botanical bead field')!.visible=!compositionEditor.hasSavedComposition();"
+new = "garden.root.getObjectByName('GPU botanical bead field')!.visible=!(creatorMode||compositionEditor.hasSavedComposition());"
 assert text.count(old) == 1
 hero.write_text(text.replace(old,new),encoding="utf-8")
 
