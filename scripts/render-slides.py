@@ -20,6 +20,8 @@ with tempfile.TemporaryDirectory() as temp:
     pdf = work / (source.stem + ".pdf")
     if not pdf.is_file():
         raise SystemExit("PowerPoint conversion did not produce a PDF")
+    slide_text = subprocess.run(["pdftotext", "-layout", str(pdf), "-"], check=True, capture_output=True, text=True).stdout
+    print("SLIDE_TEXT_JSON=" + json.dumps([page.strip() for page in slide_text.split("\f") if page.strip()]))
     subprocess.run(
         ["pdftoppm", "-png", "-scale-to", "1600", str(pdf), str(output / "slide")],
         check=True,
