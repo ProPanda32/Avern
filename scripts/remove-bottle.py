@@ -115,6 +115,14 @@ load_extra = """  let config=loadConfig(creatorMode)
   const spreadStoreKey='avern.particle.spread.v1'
   const gapStoreKey='avern.particle.gap.v1'
   const motionStoreKey='avern.particle.motion.v1'
+  const sceneToneKey='avern.scene.tone.v1'
+  let sceneTone={hue:0,saturation:1,temperature:0,light:1}
+  try {
+    const saved=JSON.parse(localStorage.getItem(sceneToneKey)||'null') as Partial<typeof sceneTone>|null
+    if(saved)for(const key of ['hue','saturation','temperature','light'] as const){
+      if(typeof saved[key]==='number'&&Number.isFinite(saved[key]))sceneTone[key]=saved[key]!
+    }
+  } catch { /* Keep neutral scene colour. */ }
   const savedSpread=Number(localStorage.getItem(spreadStoreKey))
   let particleSpread=Number.isFinite(savedSpread)&&savedSpread>=.6&&savedSpread<=1.6?savedSpread:1
   const savedGap=Number(localStorage.getItem(gapStoreKey))
@@ -234,9 +242,46 @@ panel_extra = """  resize();rebuildGarden()
   })
   particlePanel.append(resetParticles)
   hero.append(particlePanel)
+  const scenePanel=document.createElement('details')
+  scenePanel.className='avern-scene-settings'
+  scenePanel.open=true
+  scenePanel.setAttribute('aria-label','Whole scene colour and light settings')
+  const sceneSummary=document.createElement('summary')
+  sceneSummary.textContent='Scene light & colour'
+  scenePanel.append(sceneSummary)
+  function applySceneTone(){
+    const hue=THREE.MathUtils.clamp(sceneTone.hue,-180,180)+config.atmosphere.hue
+    const saturation=THREE.MathUtils.clamp(sceneTone.saturation,0,2)
+    const temperature=THREE.MathUtils.clamp(sceneTone.temperature,-100,100)
+    const light=THREE.MathUtils.clamp(sceneTone.light,.4,1.8)
+    const tint=temperature<0?`sepia(${Math.abs(temperature)/200}) hue-rotate(180deg)`:`sepia(${temperature/180})`
+    const filter=`hue-rotate(${hue}deg) saturate(${saturation}) ${tint} brightness(${light})`
+    renderer.domElement.style.filter=filter
+    hero.querySelectorAll<HTMLElement>('.averna-hero-art').forEach(image=>{image.style.filter=filter+' drop-shadow(0 12px 32px #0008)'})
+  }
+  const toneFields=[['Hue','hue',-180,180,1],['Saturation','saturation',0,2,.05],['Temperature','temperature',-100,100,1],['Light','light',.4,1.8,.05]] as const
+  const toneInputs:Partial<Record<keyof typeof sceneTone,HTMLInputElement>>={}
+  for(const [label,key,min,max,step] of toneFields){
+    const row=document.createElement('label');row.className='avern-particle-row'
+    const name=document.createElement('span');name.textContent=label
+    const input=document.createElement('input');input.type='range';input.min=String(min);input.max=String(max);input.step=String(step);input.value=String(sceneTone[key])
+    const value=document.createElement('output');value.textContent=input.value
+    input.addEventListener('input',()=>{sceneTone[key]=Number(input.value);value.textContent=input.value;applySceneTone();try{localStorage.setItem(sceneToneKey,JSON.stringify(sceneTone))}catch{}})
+    row.append(name,input,value);scenePanel.append(row);toneInputs[key]=input
+  }
+  const resetTone=document.createElement('button');resetTone.type='button';resetTone.textContent='Reset scene colour'
+  resetTone.addEventListener('click',()=>{
+    sceneTone={hue:0,saturation:1,temperature:0,light:1}
+    for(const [,key] of toneFields){const input=toneInputs[key]!;input.value=String(sceneTone[key]);input.nextElementSibling!.textContent=input.value}
+    applySceneTone();try{localStorage.removeItem(sceneToneKey)}catch{}
+  })
+  scenePanel.append(resetTone);hero.append(scenePanel);applySceneTone()
 """
 assert hero_text.count(panel_anchor) == 1, "Garden setup anchor changed"
 hero_text = hero_text.replace(panel_anchor, panel_extra)
+old_filter="renderer.domElement.style.filter='hue-rotate('+config.atmosphere.hue+'deg)'"
+assert hero_text.count(old_filter)==1, 'Scene filter anchor changed'
+hero_text=hero_text.replace(old_filter,'applySceneTone()')
 old_garden_call='config.particles.count);hero.dataset.particles'
 assert hero_text.count(old_garden_call) == 1, 'Garden call changed in source'
 hero_text = hero_text.replace(old_garden_call,'config.particles.count,particleSpread,particleGap,particleMotionAmount);hero.dataset.particles')
@@ -254,6 +299,11 @@ hero_css.write_text(
 .avern-particle-row output{text-align:right;font-variant-numeric:tabular-nums}
 .avern-particle-settings button{margin:12px 15px 15px;padding:7px 11px;border:1px solid #b79a73;background:#252e28;color:#f3eadb;cursor:pointer}
 @media(max-width:700px){.avern-particle-settings{right:10px;top:10px;width:min(280px,calc(100vw - 20px))}}
+.avern-scene-settings{position:fixed;z-index:101;right:18px;top:72px;width:min(300px,calc(100vw - 36px));color:#f3eadb;background:#101714e8;border:1px solid #bc9b6b88;box-shadow:0 12px 40px #0008;backdrop-filter:blur(16px);font:12px/1.4 Arial,sans-serif}
+.avern-scene-settings summary{cursor:pointer;padding:12px 15px;letter-spacing:.08em}
+.avern-scene-settings button{margin:12px 15px 15px;padding:7px 11px;border:1px solid #b79a73;background:#252e28;color:#f3eadb;cursor:pointer}
+.avern-particle-settings[open]~.avern-scene-settings{top:auto;bottom:18px}
+@media(max-width:700px){.avern-scene-settings{right:10px;top:62px;width:min(280px,calc(100vw - 20px))}}
 """,
     encoding="utf-8",
 )
