@@ -26,8 +26,8 @@ jobs:
         run: cp editor/particle-composition.ts source/src/particle-composition.ts && cp editor/particle-composition.css source/src/particle-composition.css
       - name: Remove only the bottle model
         run: python scripts/remove-bottle.py
-      - name: Fix Creator Studio controls
-        run: python scripts/fix-creator.py
+      - name: Include redesigned presentation
+        run: cp editor/presentation-redesign.ts source/src/presentation-redesign.ts && cp editor/presentation-redesign.css source/src/presentation-redesign.css && python scripts/redesign-slides.py
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
