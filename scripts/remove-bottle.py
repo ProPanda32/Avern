@@ -561,3 +561,6 @@ hero_css.write_text(
 """,
     encoding="utf-8",
 )
+
+# Hide the creator controls while preserving the rendered scene and saved values.
+hero_css.write_text(hero_css.read_text(encoding="utf-8") + "\n.avern-particle-settings, .avern-scene-settings, .pc-editor, .pc-open { display: none !important; }\n", encoding="utf-8")
