@@ -15,21 +15,35 @@ assert text.count(old_model) == 1, "Bottle model block changed in source"
 text = text.replace(old_import, "").replace(old_model, new_model)
 start = text.index('    <section class="fragrance-section"')
 end = text.index('  <dialog id="menu-dialog"', start)
-text = text[:start] + '''    <section class="fragrance-section" id="fragrance" aria-label="Presentation slides">
-      <button class="slide-tile" type="button" aria-label="Open The Problem slide">
-        <img src="/Avern/assets/the-problem-slide.png" alt="Preview of The Problem presentation slide">
-      </button>
+text = text[:start] + '''    <section class="fragrance-section" id="fragrance" aria-label="Averna presentation">
+      <div class="presentation-slides" role="list"></div>
     </section>
   </main>
-  <dialog id="problem-slide" class="problem-slide" aria-label="The Problem slide">
-    <button class="problem-slide-close dialog-close" type="button" aria-label="Close slide">×</button>
-    <img src="/Avern/assets/the-problem-slide.png" alt="The Problem: many websites feel static; examples of interactive websites">
+  <dialog id="deck-viewer" class="deck-viewer" aria-label="Presentation slide">
+    <button class="dialog-close deck-close" type="button" aria-label="Close slide">×</button>
+    <img alt="">
   </dialog>
 ''' + text[end:]
 slide_anchor = "const hero=app.querySelector<HTMLElement>('.site-hero')!"
-slide_actions = """const problemSlide=app.querySelector<HTMLDialogElement>('#problem-slide')!
-app.querySelector<HTMLButtonElement>('.slide-tile')!.addEventListener('click',()=>problemSlide.showModal())
-problemSlide.addEventListener('click',event=>{if(event.target===problemSlide)problemSlide.close()})
+slide_actions = """const deckList=app.querySelector<HTMLDivElement>('.presentation-slides')!
+const deckViewer=app.querySelector<HTMLDialogElement>('#deck-viewer')!
+const deckImage=deckViewer.querySelector<HTMLImageElement>('img')!
+fetch('/Avern/slides/manifest.json').then(async response=>{
+  if(!response.ok)throw new Error('Presentation slides are unavailable')
+  return await response.json() as string[]
+}).then(files=>{
+  files.forEach((file,index)=>{
+    const button=document.createElement('button')
+    button.className='deck-slide';button.type='button';button.setAttribute('role','listitem')
+    button.setAttribute('aria-label','Open presentation slide '+(index+1))
+    const image=document.createElement('img')
+    image.src='/Avern/slides/'+file;image.alt='Averna presentation slide '+(index+1)
+    image.loading=index===0?'eager':'lazy'
+    button.append(image)
+    button.addEventListener('click',()=>{deckImage.src=image.src;deckImage.alt=image.alt;deckViewer.showModal()})
+    deckList.append(button)
+  })
+}).catch(error=>{console.error(error);deckList.textContent='Presentation slides could not load.'})
 """
 assert text.count(slide_anchor) == 1, "Slide script anchor changed"
 text = text.replace(slide_anchor, slide_actions + slide_anchor)
@@ -469,3 +483,20 @@ if(logoArt.complete&&logoArt.naturalWidth)cleanLogo()
 assert hero_text.count(logo_anchor) == 1, "Logo setup anchor changed"
 hero_text = hero_text.replace(logo_anchor, logo_cleaner + logo_anchor)
 hero.write_text(hero_text, encoding="utf-8")
+
+# One presentation image per row; clicking a slide opens it at full size.
+hero_css.write_text(
+    hero_css.read_text(encoding="utf-8")
+    + """
+.fragrance-section{display:block}
+.presentation-slides{display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(24px,4vw,64px);width:min(90vw,1200px);margin:0 auto}
+.deck-slide{display:block;width:100%;padding:0;border:1px solid #d4cdc0;background:#fff;box-shadow:0 20px 55px #352d2424;cursor:pointer}
+.deck-slide img{display:block;width:100%;height:auto}
+.deck-slide:focus-visible{outline:3px solid #9c754b;outline-offset:6px}
+.deck-viewer{width:min(96vw,1600px);max-width:none;max-height:95svh;padding:38px 14px 14px;border:0;background:#eee9df}
+.deck-viewer::backdrop{background:#080b0af0;backdrop-filter:blur(8px)}
+.deck-viewer img{display:block;max-width:100%;max-height:calc(95svh - 52px);margin:auto;object-fit:contain}
+.deck-close{position:absolute;top:4px;right:12px;border:0;background:transparent;color:#29261f;font:30px Arial,sans-serif;cursor:pointer}
+""",
+    encoding="utf-8",
+)
