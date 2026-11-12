@@ -1,15 +1,9 @@
-/* Preserve the original slide dimensions and content; tint only the light paper. */
+/* Keep the original slide dimensions while rendering styled backgrounds in the slide images. */
 .presentation-slides{width:min(90vw,1200px)!important;gap:clamp(24px,4vw,64px)!important}
-.deck-slide{width:100%;padding:0;border:1px solid #a99e8c;background:var(--slide-paper,#eee9df)!important;box-shadow:0 20px 55px #352d2424;overflow:hidden;cursor:zoom-in}
-.deck-slide img{display:block;width:100%;height:auto;mix-blend-mode:multiply}
-.deck-slide:nth-child(9n + 1){--slide-paper:#e8e2d6}
-.deck-slide:nth-child(9n + 2){--slide-paper:#dce8e9}
-.deck-slide:nth-child(9n + 3){--slide-paper:#eadfce}
-.deck-slide:nth-child(9n + 4){--slide-paper:#e6e0ea}
-.deck-slide:nth-child(9n + 5){--slide-paper:#dce9e2}
-.deck-slide:nth-child(9n + 6){--slide-paper:#eadfe4}
-.deck-slide:nth-child(9n + 7){--slide-paper:#e5dce6}
-.deck-slide:nth-child(9n + 8){--slide-paper:#dfe5ef}
-.deck-slide:nth-child(9n + 9){--slide-paper:#e9e2d4}
+.deck-slide{width:100%;padding:0;border:1px solid #a99e8c;background:#071719!important;box-shadow:0 20px 55px #352d2424;overflow:hidden;cursor:zoom-in}
+.deck-slide img{display:block;width:100%;height:auto;mix-blend-mode:normal}
 .deck-slide:focus-visible{outline:3px solid #9c754b;outline-offset:6px}
 @media(max-width:700px){.presentation-slides{width:90vw!important}}
+
+.deck-viewer{background:#071719!important}
+.deck-viewer img{mix-blend-mode:normal!important}
