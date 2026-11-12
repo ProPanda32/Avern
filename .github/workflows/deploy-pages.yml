@@ -36,8 +36,14 @@ jobs:
       - name: Build original site for Avern
         working-directory: source
         run: npm run build
-      - name: Include presentation slide image
-        run: mkdir -p source/dist/assets && cp assets/the-problem-slide.png source/dist/assets/the-problem-slide.png
+      - name: Install presentation renderer
+        run: |
+          if ! command -v libreoffice >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq libreoffice-impress poppler-utils
+          fi
+      - name: Render uploaded presentation
+        run: python scripts/render-slides.py "Averna Presentation.pptx" source/dist/slides
       - name: Include Averna artwork
         run: cp assets/averna-hero.png source/dist/assets/averna-hero.png
       - name: Configure Pages
