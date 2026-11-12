@@ -507,7 +507,7 @@ new_material = """  const artworkMaterial=new THREE.MeshBasicMaterial({map:artwo
       diffuseColor.a*=smoothstep(rainbowTop,rainbowTop+.035,rainbowY)
         *(1.0-smoothstep(rainbowBottom-.04,rainbowBottom,rainbowY))
         *smoothstep(.18,.38,rainbowChroma)
-        *smoothstep(.22,.42,rainbowX)
+        *smoothstep(.42,.55,rainbowX)
         *(1.0-smoothstep(.84,.96,rainbowX));`)
   }
   artworkMaterial.customProgramCacheKey=()=> 'averna-rainbow-mask-v1'
