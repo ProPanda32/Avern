@@ -129,7 +129,7 @@ load_extra = """  let config=loadConfig(creatorMode)
   const savedGap=Number(localStorage.getItem(gapStoreKey))
   let particleGap=Number.isFinite(savedGap)&&savedGap>=.7&&savedGap<=1.4?savedGap:1
   const savedMotion=Number(localStorage.getItem(motionStoreKey))
-  let particleMotionAmount=Number.isFinite(savedMotion)&&savedMotion>=0&&savedMotion<=6?savedMotion:0
+  let particleMotionAmount=Number.isFinite(savedMotion)&&savedMotion>=0&&savedMotion<=6?Math.max(.35,savedMotion):.35
   const savedGreenBrightness=Number(localStorage.getItem(greenBrightnessKey))
   let greenBrightness=Number.isFinite(savedGreenBrightness)&&savedGreenBrightness>=0&&savedGreenBrightness<=5?savedGreenBrightness:0
   try {
