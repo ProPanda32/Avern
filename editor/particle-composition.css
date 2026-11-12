@@ -15,3 +15,6 @@
 .pc-drag{display:flex;align-items:center;gap:8px;margin:8px 0 14px}
 .pc-editor small{display:block;color:#c2b6a5}
 @media(max-width:700px){.pc-editor{left:8px;right:8px;top:auto;bottom:8px;width:auto;max-height:65svh}.pc-row{grid-template-columns:1fr 90px 40px}}
+
+.pc-open{position:fixed;z-index:1001;left:14px;top:14px;padding:10px 14px;border:1px solid #b39871;background:#101612ed;color:#f0e7d8;cursor:pointer;font:12px Arial,sans-serif}
+.pc-open[hidden]{display:none}
