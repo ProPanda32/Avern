@@ -47,3 +47,16 @@
 .av-slide--responses .av-evidence{transform:rotate(-2deg)}
 @media(max-width:800px){.av-slide{min-height:0}.av-main,.av-slide:not(:has(.av-evidence)) .av-main{grid-template-columns:1fr;padding:36px 28px 54px}.av-top,.av-bottom{padding:19px 28px}.av-slide h2{font-size:clamp(34px,9vw,64px)}.av-evidence{max-width:540px;margin:0 auto 20px}.av-slide li{font-size:16px}.av-brand{font-size:15px}.av-kicker{font-size:9px;text-align:right}}
 @media(prefers-reduced-motion:reduce){.av-evidence{transition:none}}
+
+/* Present the PowerPoint pages intact. The frame changes only the surrounding website. */
+.presentation-slides{width:min(94vw,1440px)!important;gap:clamp(38px,6vw,88px)!important}
+.original-slide{position:relative;overflow:hidden;border-radius:18px;background:#0c1718;box-shadow:0 32px 90px #16251f3d,0 2px 8px #13201925;border:1px solid #dbcaab;isolation:isolate}
+.original-slide::before{content:"";position:absolute;inset:0 0 auto;height:140px;background:radial-gradient(ellipse at 70% 0,#789e8b38,transparent 70%);pointer-events:none}
+.original-slide-header,.original-slide-footer{position:relative;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:18px clamp(20px,3vw,42px);color:#d9dfd4;font:600 11px 'DM Sans',Arial,sans-serif;letter-spacing:.16em;text-transform:uppercase}
+.original-slide-header{border-bottom:1px solid #ffffff2d}
+.original-slide-header span:first-child{color:#e8c994;font-weight:700}
+.original-slide-footer{border-top:1px solid #ffffff2d;color:#bacac2;letter-spacing:.09em}
+.original-slide-image{display:block;width:calc(100% - clamp(24px,3vw,46px));margin:clamp(12px,1.5vw,23px) auto;padding:0;border:0;border-radius:6px;overflow:hidden;background:#f4f5f7;box-shadow:0 14px 35px #0007;cursor:zoom-in}
+.original-slide-image img{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:contain}
+.original-slide-image:focus-visible{outline:3px solid #e8c994;outline-offset:5px}
+@media(max-width:600px){.original-slide-header,.original-slide-footer{padding:12px 15px;font-size:8px}.original-slide-footer span:first-child{max-width:70%}.original-slide-image{width:calc(100% - 20px);margin:10px auto}}
